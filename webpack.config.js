@@ -30,10 +30,12 @@ module.exports = {
   resolve : {
     extensions: ['', '.js', '.es6.js', '.jsx'],
     alias : {
+      components : __dirname + '/app/components',
       actions : __dirname + '/app/actions',
       constants : __dirname + '/app/constants',
       stores : __dirname + '/app/stores',
-      mixins : __dirname + '/app/mixins'
+      mixins : __dirname + '/app/mixins',
+      styles : __dirname + '/app/styles'
     }
   }
 };

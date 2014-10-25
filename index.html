@@ -4,10 +4,9 @@
   <div id="mountNode"></div>
   <script src="bundle.js"></script>
   <script>
+    // needs to be global
     var player;
-
     function onYouTubeIframeAPIReady() {
-      console.log('hello');
       player = new YT.Player('player', {
         height  : '390',
         width   : '640',
