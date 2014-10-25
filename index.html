@@ -1,40 +1,22 @@
 <html>
 <head></head>
 <body>
-
-  <script src="keypress.js"></script>
-  <script src="lyrics.js"></script>
+  <div id="mountNode"></div>
+  <script src="bundle.js"></script>
   <script>
-    console.log('lyrics', lyrics);
+    var player;
 
-    var listener = new window.keypress.Listener();
+    function onYouTubeIframeAPIReady() {
+      console.log('hello');
+      player = new YT.Player('player', {
+        height  : '390',
+        width   : '640',
+        videoId : '6Tr4QNGi_Pg',
+        events  : { 'onReady' : onPlayerReady }
+      });
+    }
 
-    var i = 0;
-
-    var start = function() {
-      var now = performance.now();
-      console.log('starting', now);
-    };
-
-    var onKeyDown = function() {
-      var now = performance.now();
-
-      console.log(lyrics[i++], now);
-    };
-
-    listener.register_many([
-      { 'keys' : 'q', 'on_keydown' : start },
-      { 'keys' : 'a', 'on_keydown' : onKeyDown },
-      { 'keys' : 's', 'on_keydown' : onKeyDown },
-      { 'keys' : 'd', 'on_keydown' : onKeyDown },
-      { 'keys' : 'f', 'on_keydown' : onKeyDown },
-      { 'keys' : 'g', 'on_keydown' : onKeyDown },
-      { 'keys' : 'h', 'on_keydown' : onKeyDown },
-      { 'keys' : 'j', 'on_keydown' : onKeyDown },
-      { 'keys' : 'k', 'on_keydown' : onKeyDown },
-      { 'keys' : 'l', 'on_keydown' : onKeyDown }
-    ]);
+    var onPlayerReady = function(event) { };
   </script>
-
 </body>
 </html>
