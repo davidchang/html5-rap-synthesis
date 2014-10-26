@@ -7,17 +7,18 @@ var route = localStorage.route || 'lyrics';
 
 var lyrics = localStorage.lyrics || '';
 var parsedLyrics = [];
+try {
+  parsedLyrics = JSON.parse(localStorage.parsedLyrics);
+} catch(e) {
+  parsedLyrics = [];
+}
 
-var currentTime = 0;
 var performanceNowOffset = 0;
+var currentLyricIndex = 0;
 
 var playInterval;
 
 class ExampleStore extends BaseStore {
-  get currentTime() {
-    return currentTime;
-  }
-
   get lyrics() {
     return lyrics;
   }
@@ -29,15 +30,18 @@ class ExampleStore extends BaseStore {
   get route() {
     return route;
   }
+
+  get currentLyricIndex() {
+    return currentLyricIndex;
+  }
 }
 
-var updateCurrentTime = () => {
-  currentTime = performance.now() - performanceNowOffset;
-  storeInstance.emitChange();
-};
-
 var parseLyrics = () => {
-  parsedLyrics = lyrics.match(/[^\s]+/g);
+  parsedLyrics = lyrics.match(/[^\s]+/g).map(lyric => {
+    return { 'lyric' : lyric };
+  });
+
+  console.log('parsedLyrics', parsedLyrics);
 };
 
 var resetOffset = true;
@@ -56,7 +60,7 @@ actions[ExampleConstants.CHANGE_ROUTE] = action => {
 
 actions[ExampleConstants.SAVE_TO_LOCAL] = () => {
   localStorage.lyrics = lyrics;
-  localStorage.parsedLyrics = parsedLyrics;
+  localStorage.parsedLyrics = JSON.stringify(parsedLyrics);
   localStorage.route = route;
 };
 
@@ -66,22 +70,28 @@ actions[ExampleConstants.PLAY_SONG] = () => {
   }
   player.playVideo();
   storeInstance.emitChange();
-
-  playInterval = setInterval(updateCurrentTime, 100);
 };
 
 actions[ExampleConstants.PAUSE_SONG] = () => {
   player.pauseVideo();
-  clearInterval(playInterval);
 };
 
 actions[ExampleConstants.STOP_SONG] = () => {
   player.stopVideo();
-  clearInterval(playInterval);
 };
 
 actions[ExampleConstants.LYRICS_CHANGE] = action => {
   lyrics = action.newValue;
+  storeInstance.emitChange();
+};
+
+actions[ExampleConstants.LYRIC_TIMING_CHANGED] = () => {
+  if (currentLyricIndex >= parsedLyrics.length) {
+    return storeInstance.emitChange();
+  }
+
+  parsedLyrics[currentLyricIndex].timing = performance.now() - performanceNowOffset;
+  currentLyricIndex++;
   storeInstance.emitChange();
 };
 

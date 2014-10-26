@@ -35,7 +35,8 @@ module.exports = {
       constants : __dirname + '/app/constants',
       stores : __dirname + '/app/stores',
       mixins : __dirname + '/app/mixins',
-      styles : __dirname + '/app/styles'
+      styles : __dirname + '/app/styles',
+      lib : __dirname + '/app/lib'
     }
   }
 };

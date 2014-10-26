@@ -17,10 +17,10 @@ var Application = React.createClass({
 
   getStateFromStores : function() {
     return {
-      currentTime  : ExampleStore.currentTime,
-      lyrics       : ExampleStore.lyrics,
-      parsedLyrics : ExampleStore.parsedLyrics,
-      route        : ExampleStore.route
+      lyrics               : ExampleStore.lyrics,
+      parsedLyrics         : ExampleStore.parsedLyrics,
+      route                : ExampleStore.route,
+      currentLyricIndex    : ExampleStore.currentLyricIndex
     };
   },
 
@@ -43,7 +43,7 @@ var Application = React.createClass({
 
         <LyricsRoute route={this.state.route} lyrics={this.state.lyrics} />
 
-        <TimingRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentTime={this.state.currentTime} />
+        <TimingRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
       </div>
     );
   }

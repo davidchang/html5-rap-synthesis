@@ -39,6 +39,12 @@ var ExampleActions = {
       actionType : ExampleConstants.LYRICS_CHANGE,
       newValue   : event.target.value
     });
+  },
+
+  lyricTimingTriggered : () => {
+    AppDispatcher.handleViewAction({
+      actionType : ExampleConstants.LYRIC_TIMING_CHANGED
+    });
   }
 
 };
