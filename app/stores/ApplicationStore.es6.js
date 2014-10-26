@@ -110,37 +110,56 @@ actions[ApplicationConstants.START_CALIBRATION] = () => {
   calibrate();
 };
 
-actions[ApplicationConstants.RAP_TO_ME] = () => {
+actions[ApplicationConstants.RAP_TO_ME] = action => {
   currentLyricIndex = 0;
+
+  var offset = action.offset || 0;
+  var start = performance.now();
 
   var debugging = false;
 
   var rap = () => {
     var rate = 1;
-    var current = parsedLyrics[currentLyricIndex];
-    if (!current.expectedDuration || (current.normalDuration > current.expectedDuration)) {
-      rate = (current.normalDuration / current.expectedDuration).toFixed(1);
+    var currentLyric = parsedLyrics[currentLyricIndex];
+    if (currentLyric.expectedDuration && (currentLyric.normalDuration > currentLyric.expectedDuration)) {
+      rate = (currentLyric.normalDuration / currentLyric.expectedDuration).toFixed(1);
       if (rate > 10) {
         rate = 10;
       }
     }
 
-    debugging && console.log(current.lyric + ' ' + current.normalDuration + ' ' + current.expectedDuration + ' ' + rate);
+    debugging && console.log(currentLyric.lyric + ' ' + currentLyric.normalDuration + ' ' + currentLyric.expectedDuration + ' ' + rate);
 
-    Speech.rap(current.lyric, rate, (time) => {
+    currentLyric.inTransit = true;
+    Speech.rap(currentLyric.lyric, rate, (time) => {
 
       debugging && console.log('took ' + time);
 
       currentLyricIndex++;
-      if (currentLyricIndex >= parsedLyrics.length) {
-        return;
-      }
-
-      rap();
     });
   };
 
-  rap();
+  var rapEventLoopInterval = setInterval(() => {
+    if (currentLyricIndex >= parsedLyrics.length) {
+      debugging && console.log('im done!');
+      clearInterval(rapEventLoopInterval);
+      return;
+    }
+
+    var currentLyric = parsedLyrics[currentLyricIndex];
+    var now = performance.now();
+
+    debugging && console.log('now - start', now - start);
+
+    if (!currentLyric.inTransit && (currentLyric.timing - offset) < (now - start)) {
+      debugging && console.log('word', currentLyric.lyric);
+      rap();
+    }
+  }, 100);
+
+  if (action.withSong) {
+    player.playVideo();
+  }
 };
 
 storeInstance = new ExampleStore(actions);

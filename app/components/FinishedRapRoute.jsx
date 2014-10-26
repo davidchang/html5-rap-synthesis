@@ -15,7 +15,8 @@ var FinishedRapRoute = React.createClass({
 
         <section className="space">
           <div className="btn-group">
-            <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe}>Rap to me!</button>
+            <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe.bind(undefined, { withSong : true, offset : 2750 })}>Rap to me with song!</button>
+            <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe.bind(undefined, { withSong : false, offset : 38000 })}>Rap to me without song!</button>
           </div>
         </section>
 

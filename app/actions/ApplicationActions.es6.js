@@ -41,10 +41,9 @@ var ExampleActions = {
     });
   },
 
-  rapToMe : () => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.RAP_TO_ME
-    });
+  rapToMe : options => {
+    options.actionType = ApplicationConstants.RAP_TO_ME;
+    AppDispatcher.handleViewAction(options);
   }
 
 };

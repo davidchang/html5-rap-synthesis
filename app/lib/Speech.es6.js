@@ -44,5 +44,4 @@ var getVoicesInterval = setInterval(function() {
   }
   clearInterval(getVoicesInterval);
   msg.voice = speechSynthesis.getVoices().filter(function(voice) { return voice.name == 'Fred'; })[0];
-  console.log('set msg.voice');
 }, 500);
