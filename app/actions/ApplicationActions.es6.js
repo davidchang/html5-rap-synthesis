@@ -16,6 +16,12 @@ var ExampleActions = {
     });
   },
 
+  revertToDefaultSong : () => {
+    AppDispatcher.handleViewAction({
+      actionType : ApplicationConstants.REVERT_TO_DEFAULT_SONG
+    });
+  },
+
   playSong : () => {
     AppDispatcher.handleViewAction({
       actionType : ApplicationConstants.PLAY_SONG

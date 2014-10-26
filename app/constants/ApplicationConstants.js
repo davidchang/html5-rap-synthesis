@@ -4,6 +4,7 @@ module.exports = keyMirror({
   CHANGE_ROUTE : null,
 
   SAVE_TO_LOCAL : null,
+  REVERT_TO_DEFAULT_SONG : null,
 
   PLAY_SONG : null,
 

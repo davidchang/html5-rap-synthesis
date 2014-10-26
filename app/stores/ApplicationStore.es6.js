@@ -3,16 +3,18 @@ var ApplicationConstants = require('constants/ApplicationConstants');
 
 var Speech = require('lib/Speech');
 
+var Defaults = require('stores/Defaults');
+
 var storeInstance;
 
-var route = localStorage.route || 'lyrics';
+var route = localStorage.route || Defaults.route;
 
-var lyrics = localStorage.lyrics || '';
-var parsedLyrics = [];
+var lyrics = localStorage.lyrics || Defaults.lyrics;
+var parsedLyrics = JSON.parse(Defaults.parsedLyrics);
 try {
   parsedLyrics = JSON.parse(localStorage.parsedLyrics);
 } catch(e) {
-  parsedLyrics = [];
+  parsedLyrics = JSON.parse(Defaults.parsedLyrics);
 }
 
 var performanceNowOffset = 0;
@@ -65,6 +67,14 @@ actions[ApplicationConstants.SAVE_TO_LOCAL] = () => {
   localStorage.lyrics = lyrics;
   localStorage.parsedLyrics = JSON.stringify(parsedLyrics);
   localStorage.route = route;
+};
+
+actions[ApplicationConstants.REVERT_TO_DEFAULT_SONG] = () => {
+  lyrics = Defaults.lyrics;
+  parsedLyrics = JSON.parse(Defaults.parsedLyrics);
+  route = Defaults.route;
+
+  storeInstance.emitChange();
 };
 
 actions[ApplicationConstants.PLAY_SONG] = () => {

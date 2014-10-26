@@ -37,7 +37,8 @@ var Application = React.createClass({
   render : function() {
     return (
       <div className="page-wrapper">
-        <button type="button" className="btn btn-primary" onClick={ApplicationActions.save}>Save</button>
+        <button type="button" className="btn btn-primary" onClick={ApplicationActions.save}>Save App Data To LocalStorage</button>
+        <button type="button" className="btn btn-primary small-left" onClick={ApplicationActions.revertToDefaultSong}>Revert to Default Song</button>
 
         <div className="player-container">
           <div id="player"></div>
