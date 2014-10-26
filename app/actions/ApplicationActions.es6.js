@@ -1,49 +1,55 @@
 var AppDispatcher = require('../AppDispatcher');
-var ExampleConstants = require('constants/ExampleConstants');
+var ApplicationConstants = require('constants/ApplicationConstants');
 
 var ExampleActions = {
 
   changeRoute : newRoute => {
     AppDispatcher.handleViewAction({
-      actionType : ExampleConstants.CHANGE_ROUTE,
+      actionType : ApplicationConstants.CHANGE_ROUTE,
       newRoute    : newRoute
     });
   },
 
   save : () => {
     AppDispatcher.handleViewAction({
-      actionType : ExampleConstants.SAVE_TO_LOCAL
+      actionType : ApplicationConstants.SAVE_TO_LOCAL
     });
   },
 
   playSong : () => {
     AppDispatcher.handleViewAction({
-      actionType : ExampleConstants.PLAY_SONG
+      actionType : ApplicationConstants.PLAY_SONG
     });
   },
 
   pauseSong : () => {
     AppDispatcher.handleViewAction({
-      actionType : ExampleConstants.PAUSE_SONG
+      actionType : ApplicationConstants.PAUSE_SONG
     });
   },
 
   stopSong : () => {
     AppDispatcher.handleViewAction({
-      actionType : ExampleConstants.STOP_SONG
+      actionType : ApplicationConstants.STOP_SONG
     });
   },
 
   handleLyricsChange : event => {
     AppDispatcher.handleViewAction({
-      actionType : ExampleConstants.LYRICS_CHANGE,
+      actionType : ApplicationConstants.LYRICS_CHANGE,
       newValue   : event.target.value
     });
   },
 
   lyricTimingTriggered : () => {
     AppDispatcher.handleViewAction({
-      actionType : ExampleConstants.LYRIC_TIMING_CHANGED
+      actionType : ApplicationConstants.LYRIC_TIMING_CHANGED
+    });
+  },
+
+  startCalibration : () => {
+    AppDispatcher.handleViewAction({
+      actionType : ApplicationConstants.START_CALIBRATION
     });
   }
 

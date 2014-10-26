@@ -10,5 +10,7 @@ module.exports = keyMirror({
   STOP_SONG : null,
 
   LYRICS_CHANGE : null,
-  LYRIC_TIMING_CHANGED : null
+  LYRIC_TIMING_CHANGED : null,
+
+  START_CALIBRATION : null
 });

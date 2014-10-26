@@ -1,26 +1,27 @@
 var React = require('react');
 
-var ExampleStore = require('stores/ExampleStore');
-var ExampleActions = require('actions/ExampleActions');
+var ApplicationStore = require('stores/ApplicationStore');
+var ApplicationActions = require('actions/ApplicationActions');
 
 var StoreListenerMixin = require('mixins/StoreListenerMixin');
 
 var LyricsRoute = require('components/LyricsRoute');
 var TimingRoute = require('components/TimingRoute');
+var CalibrationRoute = require('components/CalibrationRoute');
 
 require('bootstrap/dist/css/bootstrap.css');
 require('styles/styles.less');
 
 var Application = React.createClass({
 
-  mixins : [StoreListenerMixin(ExampleStore)],
+  mixins : [StoreListenerMixin(ApplicationStore)],
 
   getStateFromStores : function() {
     return {
-      lyrics               : ExampleStore.lyrics,
-      parsedLyrics         : ExampleStore.parsedLyrics,
-      route                : ExampleStore.route,
-      currentLyricIndex    : ExampleStore.currentLyricIndex
+      route                : ApplicationStore.route,
+      lyrics               : ApplicationStore.lyrics,
+      parsedLyrics         : ApplicationStore.parsedLyrics,
+      currentLyricIndex    : ApplicationStore.currentLyricIndex
     };
   },
 
@@ -35,7 +36,7 @@ var Application = React.createClass({
   render : function() {
     return (
       <div className="page-wrapper">
-        <button type="button" className="btn btn-primary" onClick={ExampleActions.save}>Save</button>
+        <button type="button" className="btn btn-primary" onClick={ApplicationActions.save}>Save</button>
 
         <div className="player-container">
           <div id="player"></div>
@@ -44,6 +45,8 @@ var Application = React.createClass({
         <LyricsRoute route={this.state.route} lyrics={this.state.lyrics} />
 
         <TimingRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
+
+        <CalibrationRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} />
       </div>
     );
   }

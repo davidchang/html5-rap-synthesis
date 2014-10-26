@@ -1,6 +1,6 @@
 var React = require('react');
 
-var ExampleActions = require('actions/ExampleActions');
+var ApplicationActions = require('actions/ApplicationActions');
 
 var keypress = require('lib/keypress');
 
@@ -9,7 +9,7 @@ var TimingRoute = React.createClass({
   componentDidMount : function() {
 
     var listeners = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'].map(key => {
-      return { 'keys' : key, 'on_keydown' : ExampleActions.lyricTimingTriggered };
+      return { 'keys' : key, 'on_keydown' : ApplicationActions.lyricTimingTriggered };
     });
 
     var listener = new keypress.Listener();
@@ -27,7 +27,7 @@ var TimingRoute = React.createClass({
       finishedHtml = (
         <section className="space centered">
           Done - now allow Speech Synthesis to calibrate:
-          <button type="button" className="btn btn-primary small-left" onClick={ExampleActions.changeRoute.bind(undefined, 'calibration')}>Step 3. Calibration</button>
+          <button type="button" className="btn btn-primary small-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'calibration')}>Step 3. Calibration</button>
         </section>
       );
     }
@@ -37,9 +37,9 @@ var TimingRoute = React.createClass({
         <h1>Step 2. Timing</h1>
         <section>
           <div className="btn-group">
-            <button type="button" className="btn btn-default" onClick={ExampleActions.playSong}>Play Song</button>
-            <button type="button" className="btn btn-default" onClick={ExampleActions.pauseSong}>Pause Song</button>
-            <button type="button" className="btn btn-default" onClick={ExampleActions.stopSong}>Stop Song</button>
+            <button type="button" className="btn btn-default" onClick={ApplicationActions.playSong}>Play Song</button>
+            <button type="button" className="btn btn-default" onClick={ApplicationActions.pauseSong}>Pause Song</button>
+            <button type="button" className="btn btn-default" onClick={ApplicationActions.stopSong}>Stop Song</button>
           </div>
         </section>
 
@@ -63,7 +63,7 @@ var TimingRoute = React.createClass({
 
         {finishedHtml}
 
-        <button type="button" className="btn btn-primary pull-left" onClick={ExampleActions.changeRoute.bind(undefined, 'lyrics')}>Step 1. Lyrics</button>
+        <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'lyrics')}>Step 1. Lyrics</button>
       </section>
     );
   }

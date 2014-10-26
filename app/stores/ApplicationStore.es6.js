@@ -1,5 +1,7 @@
 var BaseStore = require('./BaseStore');
-var ExampleConstants = require('constants/ExampleConstants');
+var ApplicationConstants = require('constants/ApplicationConstants');
+
+var Speech = require('lib/Speech');
 
 var storeInstance;
 
@@ -15,8 +17,6 @@ try {
 
 var performanceNowOffset = 0;
 var currentLyricIndex = 0;
-
-var playInterval;
 
 class ExampleStore extends BaseStore {
   get lyrics() {
@@ -36,56 +36,60 @@ class ExampleStore extends BaseStore {
   }
 }
 
-var parseLyrics = () => {
-  parsedLyrics = lyrics.match(/[^\s]+/g).map(lyric => {
-    return { 'lyric' : lyric };
-  });
-
-  console.log('parsedLyrics', parsedLyrics);
-};
 
 var resetOffset = true;
 
 var actions = {};
 
-actions[ExampleConstants.CHANGE_ROUTE] = action => {
+actions[ApplicationConstants.CHANGE_ROUTE] = action => {
 
   if (action.newRoute === 'timing') {
-    parseLyrics();
+    parsedLyrics = lyrics.match(/[^\s]+/g).map(lyric => {
+      return { 'lyric' : lyric };
+    });
+  } else if (action.newRoute === 'calibration') {
+    parsedLyrics.forEach((lyric, index, lyricsArray) => {
+      if (index === (lyricsArray.length - 1)) {
+        return;
+      }
+
+      lyric.expectedDuration = (lyricsArray[index + 1]).timing - lyric.timing;
+    });
   }
 
   route = action.newRoute;
   storeInstance.emitChange();
 };
 
-actions[ExampleConstants.SAVE_TO_LOCAL] = () => {
+actions[ApplicationConstants.SAVE_TO_LOCAL] = () => {
   localStorage.lyrics = lyrics;
   localStorage.parsedLyrics = JSON.stringify(parsedLyrics);
   localStorage.route = route;
 };
 
-actions[ExampleConstants.PLAY_SONG] = () => {
+actions[ApplicationConstants.PLAY_SONG] = () => {
   if (resetOffset) {
     performanceNowOffset = performance.now();
+    currentLyricIndex = 0;
   }
   player.playVideo();
   storeInstance.emitChange();
 };
 
-actions[ExampleConstants.PAUSE_SONG] = () => {
+actions[ApplicationConstants.PAUSE_SONG] = () => {
   player.pauseVideo();
 };
 
-actions[ExampleConstants.STOP_SONG] = () => {
+actions[ApplicationConstants.STOP_SONG] = () => {
   player.stopVideo();
 };
 
-actions[ExampleConstants.LYRICS_CHANGE] = action => {
+actions[ApplicationConstants.LYRICS_CHANGE] = action => {
   lyrics = action.newValue;
   storeInstance.emitChange();
 };
 
-actions[ExampleConstants.LYRIC_TIMING_CHANGED] = () => {
+actions[ApplicationConstants.LYRIC_TIMING_CHANGED] = () => {
   if (currentLyricIndex >= parsedLyrics.length) {
     return storeInstance.emitChange();
   }
@@ -93,6 +97,25 @@ actions[ExampleConstants.LYRIC_TIMING_CHANGED] = () => {
   parsedLyrics[currentLyricIndex].timing = performance.now() - performanceNowOffset;
   currentLyricIndex++;
   storeInstance.emitChange();
+};
+
+actions[ApplicationConstants.START_CALIBRATION] = () => {
+  currentLyricIndex = 0;
+  var speak = () => {
+      Speech.speak(parsedLyrics[currentLyricIndex].lyric, time => {
+      parsedLyrics[currentLyricIndex].normalDuration = time;
+      storeInstance.emitChange();
+
+      currentLyricIndex++;
+      if (currentLyricIndex >= parsedLyrics.length) {
+        return;
+      }
+
+      speak();
+    });
+  };
+
+  speak();
 };
 
 storeInstance = new ExampleStore(actions);
