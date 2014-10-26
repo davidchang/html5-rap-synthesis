@@ -8,6 +8,7 @@ var StoreListenerMixin = require('mixins/StoreListenerMixin');
 var LyricsRoute = require('components/LyricsRoute');
 var TimingRoute = require('components/TimingRoute');
 var CalibrationRoute = require('components/CalibrationRoute');
+var FinishedRapRoute = require('components/FinishedRapRoute');
 
 require('bootstrap/dist/css/bootstrap.css');
 require('styles/styles.less');
@@ -47,6 +48,8 @@ var Application = React.createClass({
         <TimingRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
 
         <CalibrationRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} />
+
+        <FinishedRapRoute route={this.state.route} />
       </div>
     );
   }

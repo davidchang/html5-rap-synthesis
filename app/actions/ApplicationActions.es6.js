@@ -22,18 +22,6 @@ var ExampleActions = {
     });
   },
 
-  pauseSong : () => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.PAUSE_SONG
-    });
-  },
-
-  stopSong : () => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.STOP_SONG
-    });
-  },
-
   handleLyricsChange : event => {
     AppDispatcher.handleViewAction({
       actionType : ApplicationConstants.LYRICS_CHANGE,
@@ -50,6 +38,12 @@ var ExampleActions = {
   startCalibration : () => {
     AppDispatcher.handleViewAction({
       actionType : ApplicationConstants.START_CALIBRATION
+    });
+  },
+
+  rapToMe : () => {
+    AppDispatcher.handleViewAction({
+      actionType : ApplicationConstants.RAP_TO_ME
     });
   }
 

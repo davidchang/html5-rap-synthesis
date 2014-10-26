@@ -13,15 +13,36 @@ msg.onstart = () => {
   startTime = performance.now();
 };
 
-var speak = (word, cb) => {
+var calibrate = (word, cb) => {
   msg.text = word;
   speechSynthesis.speak(msg);
 
-  msg.onend = event => {
+  msg.onend = () => {
+    cb(performance.now() - startTime);
+  };
+};
+
+var rap = (word, rate, cb) => {
+  msg.text = word;
+  msg.rate = rate;
+  speechSynthesis.speak(msg);
+
+  msg.onend = () => {
     cb(performance.now() - startTime);
   };
 };
 
 module.exports = {
-  speak : speak
+  calibrate : calibrate,
+  rap       : rap
 };
+
+var getVoicesInterval = setInterval(function() {
+  voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) {
+    return;
+  }
+  clearInterval(getVoicesInterval);
+  msg.voice = speechSynthesis.getVoices().filter(function(voice) { return voice.name == 'Fred'; })[0];
+  console.log('set msg.voice');
+}, 500);

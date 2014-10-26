@@ -42,7 +42,8 @@ var CalibrationRoute = React.createClass({
           </tbody>
         </table>
 
-        <button type="button" className="btn btn-primary pull-right" onClick={ApplicationActions.changeRoute.bind(undefined, 'shipIt')}>Step 4. Ship it.</button>
+        <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'shipIt')}>Step 2. Timing.</button>
+        <button type="button" className="btn btn-primary pull-right" onClick={ApplicationActions.changeRoute.bind(undefined, 'timing')}>Step 4. Finished Rap.</button>
       </section>
     );
   }

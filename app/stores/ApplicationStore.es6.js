@@ -76,14 +76,6 @@ actions[ApplicationConstants.PLAY_SONG] = () => {
   storeInstance.emitChange();
 };
 
-actions[ApplicationConstants.PAUSE_SONG] = () => {
-  player.pauseVideo();
-};
-
-actions[ApplicationConstants.STOP_SONG] = () => {
-  player.stopVideo();
-};
-
 actions[ApplicationConstants.LYRICS_CHANGE] = action => {
   lyrics = action.newValue;
   storeInstance.emitChange();
@@ -101,8 +93,8 @@ actions[ApplicationConstants.LYRIC_TIMING_CHANGED] = () => {
 
 actions[ApplicationConstants.START_CALIBRATION] = () => {
   currentLyricIndex = 0;
-  var speak = () => {
-      Speech.speak(parsedLyrics[currentLyricIndex].lyric, time => {
+  var calibrate = () => {
+    Speech.calibrate(parsedLyrics[currentLyricIndex].lyric, time => {
       parsedLyrics[currentLyricIndex].normalDuration = time;
       storeInstance.emitChange();
 
@@ -111,11 +103,44 @@ actions[ApplicationConstants.START_CALIBRATION] = () => {
         return;
       }
 
-      speak();
+      calibrate();
     });
   };
 
-  speak();
+  calibrate();
+};
+
+actions[ApplicationConstants.RAP_TO_ME] = () => {
+  currentLyricIndex = 0;
+
+  var debugging = false;
+
+  var rap = () => {
+    var rate = 1;
+    var current = parsedLyrics[currentLyricIndex];
+    if (!current.expectedDuration || (current.normalDuration > current.expectedDuration)) {
+      rate = (current.normalDuration / current.expectedDuration).toFixed(1);
+      if (rate > 10) {
+        rate = 10;
+      }
+    }
+
+    debugging && console.log(current.lyric + ' ' + current.normalDuration + ' ' + current.expectedDuration + ' ' + rate);
+
+    Speech.rap(current.lyric, rate, (time) => {
+
+      debugging && console.log('took ' + time);
+
+      currentLyricIndex++;
+      if (currentLyricIndex >= parsedLyrics.length) {
+        return;
+      }
+
+      rap();
+    });
+  };
+
+  rap();
 };
 
 storeInstance = new ExampleStore(actions);

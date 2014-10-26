@@ -38,8 +38,6 @@ var TimingRoute = React.createClass({
         <section>
           <div className="btn-group">
             <button type="button" className="btn btn-default" onClick={ApplicationActions.playSong}>Play Song</button>
-            <button type="button" className="btn btn-default" onClick={ApplicationActions.pauseSong}>Pause Song</button>
-            <button type="button" className="btn btn-default" onClick={ApplicationActions.stopSong}>Stop Song</button>
           </div>
         </section>
 

@@ -6,11 +6,11 @@ module.exports = keyMirror({
   SAVE_TO_LOCAL : null,
 
   PLAY_SONG : null,
-  PAUSE_SONG : null,
-  STOP_SONG : null,
 
   LYRICS_CHANGE : null,
   LYRIC_TIMING_CHANGED : null,
 
-  START_CALIBRATION : null
+  START_CALIBRATION : null,
+
+  RAP_TO_ME : null
 });
