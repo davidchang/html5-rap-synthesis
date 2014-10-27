@@ -48,9 +48,9 @@ var Application = React.createClass({
 
         <TimingRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
 
-        <CalibrationRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} />
+        <CalibrationRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
 
-        <FinishedRapRoute route={this.state.route} />
+        <FinishedRapRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
       </div>
     );
   }

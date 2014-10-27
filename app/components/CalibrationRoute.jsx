@@ -2,6 +2,8 @@ var React = require('react');
 
 var ApplicationActions = require('actions/ApplicationActions');
 
+var CalibratedLyricsTable = require('components/CalibratedLyricsTable');
+
 var CalibrationRoute = React.createClass({
 
   render : function() {
@@ -19,31 +21,10 @@ var CalibrationRoute = React.createClass({
           </div>
         </section>
 
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Word</th>
-              <th>Time it was said (in ms)</th>
-              <th>Desired timing (in ms)</th>
-              <th>Actual timing (in ms)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.props.parsedLyrics.map(lyric => {
-              return (
-                <tr>
-                  <td>{lyric.lyric}</td>
-                  <td>{lyric.timing}</td>
-                  <td>{lyric.expectedDuration}</td>
-                  <td>{lyric.normalDuration}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <CalibratedLyricsTable parsedLyrics={this.props.parsedLyrics} currentLyricIndex={this.props.currentLyricIndex} />
 
         <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'timing')}>Step 2. Timing.</button>
-        <button type="button" className="btn btn-primary pull-right" onClick={ApplicationActions.changeRoute.bind(undefined, 'shipIt')}>Step 4. Finished Rap.</button>
+        <button type="button" className="btn btn-primary pull-right" onClick={ApplicationActions.changeRoute.bind(undefined, 'finishedRap')}>Step 4. Finished Rap.</button>
       </section>
     );
   }

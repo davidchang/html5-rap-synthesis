@@ -1,21 +1,34 @@
 <html>
-<head></head>
+<head>
+  <title>HTML5 Rap Synthesis</title>
+</head>
 <body>
   <div id="mountNode"></div>
   <script src="bundle.js"></script>
   <script>
     // needs to be global
     var player;
+    var whenSongActuallyStarted;
+
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('player', {
         height  : '390',
         width   : '640',
-        videoId : 'P4Uv_4jGgAM',
-        events  : { 'onReady' : onPlayerReady }
+        videoId : 'N9qYF9DZPdw',
+        events  : {
+          'onReady' : onPlayerReady,
+          'onStateChange' : onPlayerStateChange
+        }
       });
     }
 
     var onPlayerReady = function(event) { };
+
+    var onPlayerStateChange = function(event) {
+      if (event.data == YT.PlayerState.PLAYING) {
+        whenSongActuallyStarted = performance.now();
+      }
+    };
   </script>
 </body>
 </html>

@@ -2,10 +2,12 @@ var React = require('react');
 
 var ApplicationActions = require('actions/ApplicationActions');
 
+var CalibratedLyricsTable = require('components/CalibratedLyricsTable');
+
 var FinishedRapRoute = React.createClass({
 
   render : function() {
-    if (this.props.route !== 'shipIt') {
+    if (this.props.route !== 'finishedRap') {
       return null;
     }
 
@@ -14,11 +16,12 @@ var FinishedRapRoute = React.createClass({
         <h1>Step 4. Finished Rap</h1>
 
         <section className="space">
-          <div className="btn-group">
-            <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe.bind(undefined, { withSong : true, offset : 2750 })}>Rap to me with song!</button>
-            <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe.bind(undefined, { withSong : false, offset : 38000 })}>Rap to me without song!</button>
-          </div>
+          <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe.bind(undefined, { withSong : true })}>Rap with music</button>
+
+          <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe.bind(undefined, { withSong : false })}>Rap without music!</button>
         </section>
+
+        <CalibratedLyricsTable parsedLyrics={this.props.parsedLyrics} currentLyricIndex={this.props.currentLyricIndex} />
 
         <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'calibration')}>Step 3. Calibration.</button>
       </section>

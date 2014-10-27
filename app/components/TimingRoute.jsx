@@ -62,7 +62,7 @@ var TimingRoute = React.createClass({
         {finishedHtml}
 
         <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'lyrics')}>Step 1. Lyrics</button>
-        <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'lyrics')}>Step 3. Calibration</button>
+        <button type="button" className="btn btn-primary pull-right" onClick={ApplicationActions.changeRoute.bind(undefined, 'calibration')}>Step 3. Calibration</button>
       </section>
     );
   }

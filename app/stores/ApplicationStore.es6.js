@@ -7,18 +7,17 @@ var Defaults = require('stores/Defaults');
 
 var storeInstance;
 
-var route = localStorage.route || Defaults.route;
+var route = localStorage.route || 'lyrics';
 
-var lyrics = localStorage.lyrics || Defaults.lyrics;
-var parsedLyrics = JSON.parse(Defaults.parsedLyrics);
+var lyrics = localStorage.lyrics;
+var parsedLyrics = [];
 try {
   parsedLyrics = JSON.parse(localStorage.parsedLyrics);
 } catch(e) {
-  parsedLyrics = JSON.parse(Defaults.parsedLyrics);
+  parsedLyrics = [];
 }
 
-var performanceNowOffset = 0;
-var currentLyricIndex = 0;
+var currentLyricIndex = -1;
 
 class ExampleStore extends BaseStore {
   get lyrics() {
@@ -79,9 +78,9 @@ actions[ApplicationConstants.REVERT_TO_DEFAULT_SONG] = () => {
 
 actions[ApplicationConstants.PLAY_SONG] = () => {
   if (resetOffset) {
-    performanceNowOffset = performance.now();
     currentLyricIndex = 0;
   }
+  player.seekTo(0);
   player.playVideo();
   storeInstance.emitChange();
 };
@@ -96,7 +95,7 @@ actions[ApplicationConstants.LYRIC_TIMING_CHANGED] = () => {
     return storeInstance.emitChange();
   }
 
-  parsedLyrics[currentLyricIndex].timing = performance.now() - performanceNowOffset;
+  parsedLyrics[currentLyricIndex].timing = performance.now() - whenSongActuallyStarted;
   currentLyricIndex++;
   storeInstance.emitChange();
 };
@@ -109,6 +108,7 @@ actions[ApplicationConstants.START_CALIBRATION] = () => {
       storeInstance.emitChange();
 
       currentLyricIndex++;
+      storeInstance.emitChange();
       if (currentLyricIndex >= parsedLyrics.length) {
         return;
       }
@@ -122,34 +122,44 @@ actions[ApplicationConstants.START_CALIBRATION] = () => {
 
 actions[ApplicationConstants.RAP_TO_ME] = action => {
   currentLyricIndex = 0;
+  parsedLyrics.forEach(lyric => {
+    lyric.inTransit = false;
+  });
 
-  var offset = action.offset || 0;
-  var start = performance.now();
+  var offset = -750; //action.offset || 0;
+  if (!action.withSong) {
+    offset = parsedLyrics[0].timing - 1000;
+  }
+  var whenSongActuallyStarted = performance.now();
 
   var debugging = false;
+
+  var mysteriousFactor = 1.5;
 
   var rap = () => {
     var rate = 1;
     var currentLyric = parsedLyrics[currentLyricIndex];
     if (currentLyric.expectedDuration && (currentLyric.normalDuration > currentLyric.expectedDuration)) {
-      rate = (currentLyric.normalDuration / currentLyric.expectedDuration).toFixed(1);
+      rate = ((currentLyric.normalDuration * mysteriousFactor) / currentLyric.expectedDuration).toFixed(1);
       if (rate > 10) {
         rate = 10;
       }
     }
 
-    debugging && console.log(currentLyric.lyric + ' ' + currentLyric.normalDuration + ' ' + currentLyric.expectedDuration + ' ' + rate);
+    debugging && console.log(currentLyric.lyric + ' ' + currentLyric.timing + ' ' + currentLyric.normalDuration + ' ' + currentLyric.expectedDuration + ' ' + rate);
 
     currentLyric.inTransit = true;
     Speech.rap(currentLyric.lyric, rate, (time) => {
 
-      debugging && console.log('took ' + time);
+      debugging && console.log('took ' + time + ' comp to ' + parsedLyrics[currentLyricIndex].expectedDuration);
 
       currentLyricIndex++;
+      storeInstance.emitChange();
     });
   };
 
   var rapEventLoopInterval = setInterval(() => {
+
     if (currentLyricIndex >= parsedLyrics.length) {
       debugging && console.log('im done!');
       clearInterval(rapEventLoopInterval);
@@ -159,15 +169,21 @@ actions[ApplicationConstants.RAP_TO_ME] = action => {
     var currentLyric = parsedLyrics[currentLyricIndex];
     var now = performance.now();
 
-    debugging && console.log('now - start', now - start);
+    debugging && console.log('now - start', now - whenSongActuallyStarted);
 
-    if (!currentLyric.inTransit && (currentLyric.timing - offset) < (now - start)) {
+    // while (((currentLyricIndex+1) < parsedLyrics.length) && ((parsedLyrics[currentLyricIndex+1].timing - offset) < (now - whenSongActuallyStarted))) {
+    //   console.log('skipping ', parsedLyrics[currentLyricIndex]);
+    //   ++currentLyricIndex;
+    // }
+
+    if (!currentLyric.inTransit && (currentLyric.timing - offset) < (now - whenSongActuallyStarted)) {
       debugging && console.log('word', currentLyric.lyric);
       rap();
     }
   }, 100);
 
   if (action.withSong) {
+    player.seekTo(0);
     player.playVideo();
   }
 };
