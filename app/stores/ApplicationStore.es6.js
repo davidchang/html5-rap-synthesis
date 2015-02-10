@@ -1,193 +1,182 @@
-var BaseStore = require('./BaseStore');
-var ApplicationConstants = require('constants/ApplicationConstants');
-
+var Reflux = require('reflux');
 var Speech = require('lib/Speech');
-
 var Defaults = require('stores/Defaults');
 
-var storeInstance;
+var actions = require('actions/ApplicationActions');
 
-var route = localStorage.route || 'lyrics';
+// TODO: handleLyricsChange
 
-var lyrics = localStorage.lyrics;
-var parsedLyrics = [];
-try {
-  parsedLyrics = JSON.parse(localStorage.parsedLyrics);
-} catch(e) {
-  parsedLyrics = [];
-}
-
-var currentLyricIndex = -1;
-
-class ExampleStore extends BaseStore {
-  get lyrics() {
-    return lyrics;
-  }
-
-  get parsedLyrics() {
-    return parsedLyrics;
-  }
-
-  get route() {
-    return route;
-  }
-
-  get currentLyricIndex() {
-    return currentLyricIndex;
-  }
-}
-
-
+// TODO: what is this resetOffset?
 var resetOffset = true;
 
-var actions = {};
-
-actions[ApplicationConstants.CHANGE_ROUTE] = action => {
-
-  if (action.newRoute === 'timing') {
-    parsedLyrics = lyrics.match(/[^\s]+/g).map(lyric => {
-      return { 'lyric' : lyric };
-    });
-  } else if (action.newRoute === 'calibration') {
-    parsedLyrics.forEach((lyric, index, lyricsArray) => {
-      if (index === (lyricsArray.length - 1)) {
-        return;
-      }
-
-      lyric.expectedDuration = (lyricsArray[index + 1]).timing - lyric.timing;
-    });
-  }
-
-  route = action.newRoute;
-  storeInstance.emitChange();
-};
-
-actions[ApplicationConstants.SAVE_TO_LOCAL] = () => {
-  localStorage.lyrics = lyrics;
-  localStorage.parsedLyrics = JSON.stringify(parsedLyrics);
-  localStorage.route = route;
-};
-
-actions[ApplicationConstants.REVERT_TO_DEFAULT_SONG] = () => {
-  lyrics = Defaults.lyrics;
-  parsedLyrics = JSON.parse(Defaults.parsedLyrics);
-  route = Defaults.route;
-
-  storeInstance.emitChange();
-};
-
-actions[ApplicationConstants.PLAY_SONG] = () => {
-  if (resetOffset) {
-    currentLyricIndex = 0;
-  }
-  player.seekTo(0);
-  player.playVideo();
-  storeInstance.emitChange();
-};
-
-actions[ApplicationConstants.LYRICS_CHANGE] = action => {
-  lyrics = action.newValue;
-  storeInstance.emitChange();
-};
-
-actions[ApplicationConstants.LYRIC_TIMING_CHANGED] = () => {
-  if (currentLyricIndex >= parsedLyrics.length) {
-    return storeInstance.emitChange();
-  }
-
-  parsedLyrics[currentLyricIndex].timing = performance.now() - whenSongActuallyStarted;
-  currentLyricIndex++;
-  storeInstance.emitChange();
-};
-
-actions[ApplicationConstants.START_CALIBRATION] = () => {
-  currentLyricIndex = 0;
-  var calibrate = () => {
-    Speech.calibrate(parsedLyrics[currentLyricIndex].lyric, time => {
-      parsedLyrics[currentLyricIndex].normalDuration = time;
-      storeInstance.emitChange();
-
-      currentLyricIndex++;
-      storeInstance.emitChange();
-      if (currentLyricIndex >= parsedLyrics.length) {
-        return;
-      }
-
-      calibrate();
-    });
-  };
-
-  calibrate();
-};
-
-actions[ApplicationConstants.RAP_TO_ME] = action => {
-  currentLyricIndex = 0;
-  parsedLyrics.forEach(lyric => {
-    lyric.inTransit = false;
-  });
-
-  var offset = -750; //action.offset || 0;
-  if (!action.withSong) {
-    offset = parsedLyrics[0].timing - 1000;
-  }
-  var whenSongActuallyStarted = performance.now();
-
-  var debugging = false;
-
-  var mysteriousFactor = 1.5;
-
-  var rap = () => {
-    var rate = 1;
-    var currentLyric = parsedLyrics[currentLyricIndex];
-    if (currentLyric.expectedDuration && (currentLyric.normalDuration > currentLyric.expectedDuration)) {
-      rate = ((currentLyric.normalDuration * mysteriousFactor) / currentLyric.expectedDuration).toFixed(1);
-      if (rate > 10) {
-        rate = 10;
-      }
+module.exports = Reflux.createStore({
+  listenables: actions,
+  init: function() {
+    this.route = localStorage.route || 'lyrics';
+    this.lyrics = localStorage.lyrics;
+    try {
+      this.parsedLyrics = JSON.parse(localStorage.parsedLyrics);
+    } catch(e) {
+      this.parsedLyrics = [];
     }
 
-    debugging && console.log(currentLyric.lyric + ' ' + currentLyric.timing + ' ' + currentLyric.normalDuration + ' ' + currentLyric.expectedDuration + ' ' + rate);
+    this.currentLyricIndex = -1;
+  },
 
-    currentLyric.inTransit = true;
-    Speech.rap(currentLyric.lyric, rate, (time) => {
+  onChangeRoute : function(action) {
+    if (action.newRoute === 'timing') {
+      this.parsedLyrics = this.lyrics.match(/[^\s]+/g).map(lyric => {
+        return { 'lyric' : lyric };
+      });
+    } else if (action.newRoute === 'calibration') {
+      this.parsedLyrics.forEach((lyric, index, lyricsArray) => {
+        if (index === (lyricsArray.length - 1)) {
+          return;
+        }
 
-      debugging && console.log('took ' + time + ' comp to ' + parsedLyrics[currentLyricIndex].expectedDuration);
-
-      currentLyricIndex++;
-      storeInstance.emitChange();
-    });
-  };
-
-  var rapEventLoopInterval = setInterval(() => {
-
-    if (currentLyricIndex >= parsedLyrics.length) {
-      debugging && console.log('im done!');
-      clearInterval(rapEventLoopInterval);
-      return;
+        lyric.expectedDuration = (lyricsArray[index + 1]).timing - lyric.timing;
+      });
     }
+  },
 
-    var currentLyric = parsedLyrics[currentLyricIndex];
-    var now = performance.now();
+  saveToLocal : function() {
+    localStorage.lyrics = this.lyrics;
+    localStorage.parsedLyrics = JSON.stringify(this.parsedLyrics);
+    localStorage.route = this.route;
+  },
 
-    debugging && console.log('now - start', now - whenSongActuallyStarted);
+  onRevertToDefaultSong : function() {
+    this.lyrics = Defaults.lyrics;
+    this.parsedLyrics = JSON.parse(Defaults.parsedLyrics);
+    this.route = Defaults.route;
 
-    // while (((currentLyricIndex+1) < parsedLyrics.length) && ((parsedLyrics[currentLyricIndex+1].timing - offset) < (now - whenSongActuallyStarted))) {
-    //   console.log('skipping ', parsedLyrics[currentLyricIndex]);
-    //   ++currentLyricIndex;
-    // }
+    this.emitChange();
+  },
 
-    if (!currentLyric.inTransit && (currentLyric.timing - offset) < (now - whenSongActuallyStarted)) {
-      debugging && console.log('word', currentLyric.lyric);
-      rap();
+  onPlaySong : function() {
+    if (resetOffset) {
+      this.currentLyricIndex = 0;
     }
-  }, 100);
-
-  if (action.withSong) {
     player.seekTo(0);
     player.playVideo();
+
+    this.emitChange();
+  },
+
+  onLyricTimingTriggered : function() {
+    if (this.currentLyricIndex >= parsedLyrics.length) {
+      return storeInstance.emitChange();
+    }
+
+    parsedLyrics[this.currentLyricIndex].timing = performance.now() - whenSongActuallyStarted;
+    this.currentLyricIndex++;
+    this.emitChange();
+  },
+
+  onStartCalibration : function() {
+    this.currentLyricIndex = 0;
+    var calibrate = () => {
+      Speech.calibrate(parsedLyrics[this.currentLyricIndex].lyric, time => {
+        parsedLyrics[this.currentLyricIndex].normalDuration = time;
+        storeInstance.emitChange();
+
+        this.currentLyricIndex++;
+        storeInstance.emitChange();
+        if (this.currentLyricIndex >= parsedLyrics.length) {
+          return;
+        }
+
+        calibrate();
+      });
+    };
+
+    calibrate();
+  },
+
+  onRapToMe : function() {
+    this.currentLyricIndex = 0;
+    parsedLyrics.forEach(lyric => {
+      lyric.inTransit = false;
+    });
+
+    var offset = -750; //action.offset || 0;
+    if (!action.withSong) {
+      offset = parsedLyrics[0].timing - 1000;
+    }
+    var whenSongActuallyStarted = performance.now();
+
+    var debugging = false;
+
+    var mysteriousFactor = 1.5;
+
+    var rap = () => {
+      var rate = 1;
+      var currentLyric = parsedLyrics[this.currentLyricIndex];
+      if (currentLyric.expectedDuration && (currentLyric.normalDuration > currentLyric.expectedDuration)) {
+        rate = ((currentLyric.normalDuration * mysteriousFactor) / currentLyric.expectedDuration).toFixed(1);
+        if (rate > 10) {
+          rate = 10;
+        }
+      }
+
+      debugging && console.log(currentLyric.lyric + ' ' + currentLyric.timing + ' ' + currentLyric.normalDuration + ' ' + currentLyric.expectedDuration + ' ' + rate);
+
+      currentLyric.inTransit = true;
+      Speech.rap(currentLyric.lyric, rate, (time) => {
+
+        debugging && console.log('took ' + time + ' comp to ' + parsedLyrics[this.currentLyricIndex].expectedDuration);
+
+        this.currentLyricIndex++;
+        storeInstance.emitChange();
+      });
+    };
+
+    var rapEventLoopInterval = setInterval(() => {
+
+      if (this.currentLyricIndex >= parsedLyrics.length) {
+        debugging && console.log('im done!');
+        clearInterval(rapEventLoopInterval);
+        return;
+      }
+
+      var currentLyric = parsedLyrics[this.currentLyricIndex];
+      var now = performance.now();
+
+      debugging && console.log('now - start', now - whenSongActuallyStarted);
+
+      // while (((this.currentLyricIndex+1) < parsedLyrics.length) && ((parsedLyrics[this.currentLyricIndex+1].timing - offset) < (now - whenSongActuallyStarted))) {
+      //   console.log('skipping ', parsedLyrics[this.currentLyricIndex]);
+      //   ++this.currentLyricIndex;
+      // }
+
+      if (!currentLyric.inTransit && (currentLyric.timing - offset) < (now - whenSongActuallyStarted)) {
+        debugging && console.log('word', currentLyric.lyric);
+        rap();
+      }
+    }, 100);
+
+    if (action.withSong) {
+      player.seekTo(0);
+      player.playVideo();
+    }
+  },
+
+  getExposedData : function() {
+    return {
+      'lyrics' : this.lyrics,
+      'parsedLyrics' : this.parsedLyrics,
+      'currentLyricIndex' : this.currentLyricIndex
+    };
+  },
+
+  emitChange : function(status) {
+    var expose = this.getExposedData();
+
+    if (status) {
+      expose._status = status;
+    }
+
+    this.trigger(expose);
   }
-};
 
-storeInstance = new ExampleStore(actions);
-
-module.exports = storeInstance;
+});

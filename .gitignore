@@ -20,3 +20,5 @@ bundle.js
 *.woff
 *.eot
 *.ttf
+
+*.log

@@ -1,9 +1,8 @@
 var React = require('react');
+var Reflux = require('reflux');
 
 var ApplicationStore = require('stores/ApplicationStore');
 var ApplicationActions = require('actions/ApplicationActions');
-
-var StoreListenerMixin = require('mixins/StoreListenerMixin');
 
 var LyricsRoute = require('components/LyricsRoute');
 var TimingRoute = require('components/TimingRoute');
@@ -15,16 +14,7 @@ require('styles/styles.less');
 
 var Application = React.createClass({
 
-  mixins : [StoreListenerMixin(ApplicationStore)],
-
-  getStateFromStores : function() {
-    return {
-      route                : ApplicationStore.route,
-      lyrics               : ApplicationStore.lyrics,
-      parsedLyrics         : ApplicationStore.parsedLyrics,
-      currentLyricIndex    : ApplicationStore.currentLyricIndex
-    };
-  },
+  mixins : [Reflux.connect(ApplicationStore)],
 
   componentDidMount : function() {
     var tag = document.createElement('script');
@@ -57,4 +47,4 @@ var Application = React.createClass({
 
 });
 
-React.renderComponent(Application(), document.getElementById('mountNode'));
+React.render(Application(), document.getElementById('mountNode'));
