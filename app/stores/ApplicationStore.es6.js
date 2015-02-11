@@ -4,15 +4,12 @@ var Defaults = require('stores/Defaults');
 
 var actions = require('actions/ApplicationActions');
 
-// TODO: handleLyricsChange
-
 // TODO: what is this resetOffset?
 var resetOffset = true;
 
 module.exports = Reflux.createStore({
   listenables: actions,
   init: function() {
-    this.route = localStorage.route || 'lyrics';
     this.lyrics = localStorage.lyrics;
     try {
       this.parsedLyrics = JSON.parse(localStorage.parsedLyrics);
@@ -23,37 +20,24 @@ module.exports = Reflux.createStore({
     this.currentLyricIndex = -1;
   },
 
-  onChangeRoute : function(action) {
-    if (action.newRoute === 'timing') {
-      this.parsedLyrics = this.lyrics.match(/[^\s]+/g).map(lyric => {
-        return { 'lyric' : lyric };
-      });
-    } else if (action.newRoute === 'calibration') {
-      this.parsedLyrics.forEach((lyric, index, lyricsArray) => {
-        if (index === (lyricsArray.length - 1)) {
-          return;
-        }
-
-        lyric.expectedDuration = (lyricsArray[index + 1]).timing - lyric.timing;
-      });
-    }
+  onSaveLyrics : function(lyrics) {
+    this.lyrics = lyrics;
+    this.parsedLyrics = this.lyrics.match(/[^\s]+/g).map(lyric => ({ 'lyric' : lyric }));
   },
 
-  saveToLocal : function() {
+  onSaveToLocalStorage : function() {
     localStorage.lyrics = this.lyrics;
     localStorage.parsedLyrics = JSON.stringify(this.parsedLyrics);
-    localStorage.route = this.route;
   },
 
   onRevertToDefaultSong : function() {
     this.lyrics = Defaults.lyrics;
     this.parsedLyrics = JSON.parse(Defaults.parsedLyrics);
-    this.route = Defaults.route;
 
     this.emitChange();
   },
 
-  onPlaySong : function() {
+  onStartTiming : function() {
     if (resetOffset) {
       this.currentLyricIndex = 0;
     }
@@ -64,25 +48,36 @@ module.exports = Reflux.createStore({
   },
 
   onLyricTimingTriggered : function() {
-    if (this.currentLyricIndex >= parsedLyrics.length) {
-      return storeInstance.emitChange();
+    if (this.currentLyricIndex >= this.parsedLyrics.length) {
+      return this.emitChange();
     }
 
-    parsedLyrics[this.currentLyricIndex].timing = performance.now() - whenSongActuallyStarted;
+    this.parsedLyrics[this.currentLyricIndex].timing = performance.now() - whenSongActuallyStarted;
     this.currentLyricIndex++;
+
     this.emitChange();
+  },
+
+  onCrunchLyricDurations : function() {
+    this.parsedLyrics.forEach((lyric, index, lyricsArray) => {
+      if (index === (lyricsArray.length - 1)) {
+        return;
+      }
+
+      lyric.expectedDuration = (lyricsArray[index + 1]).timing - lyric.timing;
+    });
   },
 
   onStartCalibration : function() {
     this.currentLyricIndex = 0;
     var calibrate = () => {
-      Speech.calibrate(parsedLyrics[this.currentLyricIndex].lyric, time => {
-        parsedLyrics[this.currentLyricIndex].normalDuration = time;
-        storeInstance.emitChange();
-
+      Speech.calibrate(this.parsedLyrics[this.currentLyricIndex].lyric, time => {
+        this.parsedLyrics[this.currentLyricIndex].normalDuration = time;
         this.currentLyricIndex++;
-        storeInstance.emitChange();
-        if (this.currentLyricIndex >= parsedLyrics.length) {
+
+        this.emitChange();
+
+        if (this.currentLyricIndex >= this.parsedLyrics.length) {
           return;
         }
 
@@ -93,15 +88,15 @@ module.exports = Reflux.createStore({
     calibrate();
   },
 
-  onRapToMe : function() {
+  onStartRap : function(options) {
     this.currentLyricIndex = 0;
-    parsedLyrics.forEach(lyric => {
+    this.parsedLyrics.forEach(lyric => {
       lyric.inTransit = false;
     });
 
-    var offset = -750; //action.offset || 0;
-    if (!action.withSong) {
-      offset = parsedLyrics[0].timing - 1000;
+    var offset = -750; //options.offset || 0;
+    if (!options.withSong) {
+      offset = this.parsedLyrics[0].timing - 1000;
     }
     var whenSongActuallyStarted = performance.now();
 
@@ -111,7 +106,7 @@ module.exports = Reflux.createStore({
 
     var rap = () => {
       var rate = 1;
-      var currentLyric = parsedLyrics[this.currentLyricIndex];
+      var currentLyric = this.parsedLyrics[this.currentLyricIndex];
       if (currentLyric.expectedDuration && (currentLyric.normalDuration > currentLyric.expectedDuration)) {
         rate = ((currentLyric.normalDuration * mysteriousFactor) / currentLyric.expectedDuration).toFixed(1);
         if (rate > 10) {
@@ -124,28 +119,28 @@ module.exports = Reflux.createStore({
       currentLyric.inTransit = true;
       Speech.rap(currentLyric.lyric, rate, (time) => {
 
-        debugging && console.log('took ' + time + ' comp to ' + parsedLyrics[this.currentLyricIndex].expectedDuration);
+        debugging && console.log('took ' + time + ' comp to ' + this.parsedLyrics[this.currentLyricIndex].expectedDuration);
 
         this.currentLyricIndex++;
-        storeInstance.emitChange();
+        this.emitChange();
       });
     };
 
     var rapEventLoopInterval = setInterval(() => {
 
-      if (this.currentLyricIndex >= parsedLyrics.length) {
+      if (this.currentLyricIndex >= this.parsedLyrics.length) {
         debugging && console.log('im done!');
         clearInterval(rapEventLoopInterval);
         return;
       }
 
-      var currentLyric = parsedLyrics[this.currentLyricIndex];
+      var currentLyric = this.parsedLyrics[this.currentLyricIndex];
       var now = performance.now();
 
       debugging && console.log('now - start', now - whenSongActuallyStarted);
 
-      // while (((this.currentLyricIndex+1) < parsedLyrics.length) && ((parsedLyrics[this.currentLyricIndex+1].timing - offset) < (now - whenSongActuallyStarted))) {
-      //   console.log('skipping ', parsedLyrics[this.currentLyricIndex]);
+      // while (((this.currentLyricIndex+1) < this.parsedLyrics.length) && ((this.parsedLyrics[this.currentLyricIndex+1].timing - offset) < (now - whenSongActuallyStarted))) {
+      //   console.log('skipping ', this.parsedLyrics[this.currentLyricIndex]);
       //   ++this.currentLyricIndex;
       // }
 
@@ -155,7 +150,7 @@ module.exports = Reflux.createStore({
       }
     }, 100);
 
-    if (action.withSong) {
+    if (options.withSong) {
       player.seekTo(0);
       player.playVideo();
     }

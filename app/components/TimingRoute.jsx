@@ -1,10 +1,22 @@
 var React = require('react');
+var Reflux = require('reflux');
+var Router = require('react-router');
 
+var ApplicationStore = require('stores/ApplicationStore');
 var ApplicationActions = require('actions/ApplicationActions');
 
 var keypress = require('lib/keypress');
 
 var TimingRoute = React.createClass({
+
+  mixins : [
+    Router.Navigation,
+    Reflux.connect(ApplicationStore)
+  ],
+
+  getInitialState : function() {
+    return ApplicationStore.getExposedData();
+  },
 
   componentDidMount : function() {
 
@@ -16,18 +28,23 @@ var TimingRoute = React.createClass({
     listener.register_many(listeners);
   },
 
+  _goToLyrics : function() {
+    this.transitionTo('lyrics');
+  },
+
+  _goToCalibration : function() {
+    ApplicationActions.crunchLyricDurations();
+    this.transitionTo('calibration');
+  },
+
   render : function() {
-    if (this.props.route !== 'timing') {
-      return null;
-    }
 
     var finishedHtml = null;
 
-    if (this.props.currentLyricIndex >= this.props.parsedLyrics.length) {
+    if (this.state.currentLyricIndex >= this.state.parsedLyrics.length) {
       finishedHtml = (
         <section className="space centered">
-          Done - now allow Speech Synthesis to calibrate:
-          <button type="button" className="btn btn-primary small-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'calibration')}>Step 3. Calibration</button>
+          Done - now allow Speech Synthesis to calibrate..
         </section>
       );
     }
@@ -37,32 +54,56 @@ var TimingRoute = React.createClass({
         <h1>Step 2. Timing</h1>
         <section>
           <div className="btn-group">
-            <button type="button" className="btn btn-default" onClick={ApplicationActions.playSong}>Play Song</button>
+            <button
+              type="button"
+              className="btn btn-default"
+              onClick={ApplicationActions.startTiming}>
+              Play Song
+            </button>
           </div>
         </section>
 
         <section className="space">
-          {this.props.parsedLyrics.map((lyric, index) => {
-            if (this.props.currentLyricIndex > index) {
+          {this.state.parsedLyrics.map((lyric, index) => {
+            if (this.state.currentLyricIndex > index) {
               return null;
             }
 
-            if (this.props.currentLyricIndex == index) {
+            if (this.state.currentLyricIndex == index) {
               return (
-                <div className="panel panel-default bold centered">
+                <div key={index} className="panel panel-default bold centered">
                   <div className="panel-body">{lyric.lyric}</div>
                 </div>
               );
             }
 
-            return <div className="centered">{lyric.lyric}</div>;
+            return (
+              <div
+                key={index}
+                className="centered">
+                {lyric.lyric}
+              </div>
+            );
+
           })}
         </section>
 
+        <button
+          type="button"
+          className="btn btn-primary pull-left"
+          onClick={this._goToLyrics}>
+          Step 1. Lyrics
+        </button>
+
         {finishedHtml}
 
-        <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'lyrics')}>Step 1. Lyrics</button>
-        <button type="button" className="btn btn-primary pull-right" onClick={ApplicationActions.changeRoute.bind(undefined, 'calibration')}>Step 3. Calibration</button>
+        <button
+          type="button"
+          className="btn btn-primary pull-right"
+          onClick={this._goToCalibration}>
+          Step 3. Calibration
+        </button>
+
       </section>
     );
   }

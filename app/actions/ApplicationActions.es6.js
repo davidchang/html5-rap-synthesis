@@ -1,11 +1,18 @@
 var Reflux = require('reflux');
 module.exports = Reflux.createActions([
-  'changeRoute',
-  'save',
-  'revertToDefaultSong',
-  'playSong',
-  'handleLyricsChange',
+  'saveToLocalStorage',
+
+  // lyrics
+  'saveLyrics',
+
+  // timing
+  'startTiming',
   'lyricTimingTriggered',
+  'crunchLyricDurations',
+
+  // calibration
   'startCalibration',
-  'rapToMe'
+
+  // rap
+  'startRap'
 ]);

@@ -25,7 +25,7 @@ var CalibratedLyricsTable = React.createClass({
             }
 
             return (
-              <tr className={className}>
+              <tr key={index} className={className}>
                 <td>{lyric.lyric}</td>
                 <td>{lyric.timing}</td>
                 <td>{lyric.expectedDuration}</td>

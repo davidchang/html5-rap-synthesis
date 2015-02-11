@@ -1,8 +1,14 @@
 var React = require('react');
-var Reflux = require('reflux');
 
-var ApplicationStore = require('stores/ApplicationStore');
 var ApplicationActions = require('actions/ApplicationActions');
+
+var Router = require('react-router');
+var {
+  Route,
+  Redirect,
+  NotFoundRoute,
+  RouteHandler
+} = Router;
 
 var LyricsRoute = require('components/LyricsRoute');
 var TimingRoute = require('components/TimingRoute');
@@ -13,8 +19,6 @@ require('bootstrap/dist/css/bootstrap.css');
 require('styles/styles.less');
 
 var Application = React.createClass({
-
-  mixins : [Reflux.connect(ApplicationStore)],
 
   componentDidMount : function() {
     var tag = document.createElement('script');
@@ -27,24 +31,36 @@ var Application = React.createClass({
   render : function() {
     return (
       <div className="page-wrapper">
-        <button type="button" className="btn btn-primary" onClick={ApplicationActions.save}>Save App Data To LocalStorage</button>
-        <button type="button" className="btn btn-primary small-left" onClick={ApplicationActions.revertToDefaultSong}>Revert to Default Song</button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={ApplicationActions.saveToLocalStorage}>
+          Save App Data To LocalStorage
+        </button>
 
         <div className="player-container">
           <div id="player"></div>
         </div>
 
-        <LyricsRoute route={this.state.route} lyrics={this.state.lyrics} />
-
-        <TimingRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
-
-        <CalibrationRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
-
-        <FinishedRapRoute route={this.state.route} parsedLyrics={this.state.parsedLyrics} currentLyricIndex={this.state.currentLyricIndex} />
+        <RouteHandler />
       </div>
     );
   }
 
 });
 
-React.render(Application(), document.getElementById('mountNode'));
+var routes = (
+  <Route name="app" path="/" handler={Application}>
+    <Route name="lyrics" handler={LyricsRoute} />
+    <Route name="timing" handler={TimingRoute} />
+    <Route name="calibration" handler={CalibrationRoute} />
+    <Route name="rap" handler={FinishedRapRoute} />
+
+    <Redirect from="" to="lyrics" />
+    <NotFoundRoute handler={LyricsRoute} />
+  </Route>
+);
+
+Router.run(routes, function(Handler) {
+  React.render(<Handler />, document.getElementById('mountNode'));
+});

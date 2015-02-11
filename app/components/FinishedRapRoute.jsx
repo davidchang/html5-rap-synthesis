@@ -1,33 +1,62 @@
 var React = require('react');
+var Reflux = require('reflux');
+var Router = require('react-router');
 
+var ApplicationStore = require('stores/ApplicationStore');
 var ApplicationActions = require('actions/ApplicationActions');
 
 var CalibratedLyricsTable = require('components/CalibratedLyricsTable');
 
-var FinishedRapRoute = React.createClass({
+var RapRoute = React.createClass({
+
+  mixins : [
+    Router.Navigation,
+    Reflux.connect(ApplicationStore)
+  ],
+
+  getInitialState : function() {
+    return ApplicationStore.getExposedData();
+  },
+
+  _goToCalibration : function() {
+    this.transitionTo('calibration');
+  },
 
   render : function() {
-    if (this.props.route !== 'finishedRap') {
-      return null;
-    }
-
     return (
       <section className="clearfix">
         <h1>Step 4. Finished Rap</h1>
 
         <section className="space">
-          <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe.bind(undefined, { withSong : true })}>Rap with music</button>
+          <button
+            type="button"
+            className="btn btn-default"
+            onClick={ApplicationActions.startRap.bind(undefined, { withSong : true })}>
+            Rap with music
+          </button>
 
-          <button type="button" className="btn btn-default" onClick={ApplicationActions.rapToMe.bind(undefined, { withSong : false })}>Rap without music!</button>
+          <button
+            type="button"
+            className="btn btn-default"
+            onClick={ApplicationActions.startRap.bind(undefined, { withSong : false })}>
+            Rap without music
+          </button>
         </section>
 
-        <CalibratedLyricsTable parsedLyrics={this.props.parsedLyrics} currentLyricIndex={this.props.currentLyricIndex} />
+        <CalibratedLyricsTable
+          parsedLyrics={this.state.parsedLyrics}
+          currentLyricIndex={this.state.currentLyricIndex} />
 
-        <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'calibration')}>Step 3. Calibration.</button>
+        <button
+          type="button"
+          className="btn btn-primary pull-left"
+          onClick={this._goToCalibration}>
+          Step 3. Calibration.
+        </button>
       </section>
     );
   }
 
 });
 
-module.exports = FinishedRapRoute;
+module.exports = RapRoute;
