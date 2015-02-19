@@ -44,6 +44,7 @@ var RapRoute = React.createClass({
         </section>
 
         <CalibratedLyricsTable
+          mode="rap"
           parsedLyrics={this.state.parsedLyrics}
           currentLyricIndex={this.state.currentLyricIndex} />
 

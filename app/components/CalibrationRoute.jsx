@@ -43,6 +43,7 @@ var CalibrationRoute = React.createClass({
         </section>
 
         <CalibratedLyricsTable
+          mode="calibration"
           parsedLyrics={this.state.parsedLyrics}
           currentLyricIndex={this.state.currentLyricIndex} />
 

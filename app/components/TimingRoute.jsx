@@ -1,6 +1,7 @@
 var React = require('react');
 var Reflux = require('reflux');
 var Router = require('react-router');
+var _ = require('lodash');
 
 var ApplicationStore = require('stores/ApplicationStore');
 var ApplicationActions = require('actions/ApplicationActions');
@@ -15,7 +16,7 @@ var TimingRoute = React.createClass({
   ],
 
   getInitialState : function() {
-    return ApplicationStore.getExposedData();
+    return _.extend(ApplicationStore.getExposedData(), { speed : 1 });
   },
 
   componentDidMount : function() {
@@ -37,6 +38,16 @@ var TimingRoute = React.createClass({
     this.transitionTo('calibration');
   },
 
+  _startTiming : function() {
+    ApplicationActions.startTiming(this.state.speed);
+  },
+
+  _speedChange : function(e) {
+    this.setState({
+      speed : e.target.value
+    });
+  },
+
   render : function() {
 
     var finishedHtml = null;
@@ -53,14 +64,35 @@ var TimingRoute = React.createClass({
       <section className="clearfix">
         <h1>Step 2. Timing</h1>
         <section>
+
+          { /* this should be fixed later to dynamically pull playback rates */ }
+          <div>
+            <label className="radio-inline">
+              <input checked={this.state.speed == 0.25} onChange={this._speedChange} type="radio" name="speedOpt" value="0.25" />0.25
+            </label>
+            <label className="radio-inline">
+              <input checked={this.state.speed == 0.5} onChange={this._speedChange} type="radio" name="speedOpt" value="0.5" />0.5
+            </label>
+            <label className="radio-inline">
+              <input checked={this.state.speed == 1} onChange={this._speedChange} type="radio" name="speedOpt" value="1" />1
+            </label>
+            <label className="radio-inline">
+              <input checked={this.state.speed == 1.5} onChange={this._speedChange} type="radio" name="speedOpt" value="1.5" />1.5
+            </label>
+            <label className="radio-inline">
+              <input checked={this.state.speed == 2} onChange={this._speedChange} type="radio" name="speedOpt" value="2" />2
+            </label>
+          </div>
+
           <div className="btn-group">
             <button
               type="button"
               className="btn btn-default"
-              onClick={ApplicationActions.startTiming}>
-              Play Song
+              onClick={this._startTiming}>
+              Start Timing
             </button>
           </div>
+
         </section>
 
         <section className="space">
