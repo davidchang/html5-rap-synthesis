@@ -8,6 +8,8 @@ var ApplicationActions = require('actions/ApplicationActions');
 
 var keypress = require('lib/keypress');
 
+var listener = new keypress.Listener();
+
 var TimingRoute = React.createClass({
 
   mixins : [
@@ -19,14 +21,9 @@ var TimingRoute = React.createClass({
     return _.extend(ApplicationStore.getExposedData(), { speed : 1 });
   },
 
-  componentDidMount : function() {
-
-    var listeners = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'].map(key => {
-      return { 'keys' : key, 'on_keydown' : ApplicationActions.lyricTimingTriggered };
-    });
-
-    var listener = new keypress.Listener();
-    listener.register_many(listeners);
+  componentWillUnmount : function() {
+    // remove bindings
+    listener.reset();
   },
 
   _goToLyrics : function() {
@@ -38,8 +35,18 @@ var TimingRoute = React.createClass({
     this.transitionTo('calibration');
   },
 
-  _startTiming : function() {
-    ApplicationActions.startTiming(this.state.speed);
+  _togglePlayingStatus : function() {
+    if (this.state.status === 'stopped') {
+      // only attach keyboard bindings when you start the song to time
+      var listeners = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'].map(key => {
+        return { 'keys' : key, 'on_keydown' : ApplicationActions.lyricTimingTriggered };
+      });
+
+      listener.register_many(listeners);
+      ApplicationActions.startTiming(this.state.speed);
+    } else {
+      ApplicationActions.stopTiming();
+    }
   },
 
   _speedChange : function(e) {
@@ -84,14 +91,12 @@ var TimingRoute = React.createClass({
             </label>
           </div>
 
-          <div className="btn-group">
-            <button
-              type="button"
-              className="btn btn-default"
-              onClick={this._startTiming}>
-              Start Timing
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn btn-default"
+            onClick={this._togglePlayingStatus}>
+            {this.state.status === 'playing' ? 'Stop Timing' : 'Start Timing'}
+          </button>
 
         </section>
 

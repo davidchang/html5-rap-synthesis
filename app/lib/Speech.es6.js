@@ -18,6 +18,8 @@ msg.onstart = () => {
 
 var calibrate = (word, cb) => {
   msg.text = word;
+  msg.volume = 1;
+  msg.rate = 1;
   invokeTime = performance.now();
   speechSynthesis.speak(msg);
 

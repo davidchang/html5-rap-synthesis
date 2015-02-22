@@ -3,16 +3,21 @@ module.exports = Reflux.createActions([
   'saveToLocalStorage',
 
   // lyrics
+  'changeVideo',
   'saveLyrics',
 
   // timing
   'startTiming',
+  'stopTiming',
+
   'lyricTimingTriggered',
   'crunchLyricDurations',
 
   // calibration
   'startCalibration',
+  'stopCalibration',
 
   // rap
-  'startRap'
+  'startRap',
+  'stopRap'
 ]);

@@ -8,12 +8,19 @@ var LyricsRoute = React.createClass({
   mixins : [Router.Navigation],
 
   getInitialState : function() {
-    return { lyrics : '' };
+    return { lyrics : '', videoCode : '' };
   },
 
   componentWillMount : function() {
     // in case there are lyrics
     this.setState(ApplicationStore.getExposedData());
+  },
+
+  _handleVideoCodeChange : function(event) {
+    event.preventDefault();
+    this.setState({
+      videoCode : event.target.value
+    });
   },
 
   _handleLyricsChange : function(event) {
@@ -33,6 +40,7 @@ var LyricsRoute = React.createClass({
         <h1>Step 1. Lyrics</h1>
 
         <form className="form-inline">
+          <span style={{ marginRight : '10px' }}>Change Video:</span>
           <div className="form-group">
             <div className="input-group">
               <div className="input-group-addon">youtube.com/watch?v=</div>
@@ -40,10 +48,16 @@ var LyricsRoute = React.createClass({
                 className="form-control"
                 id="youtubeVideoCode"
                 placeholder="P4Uv_4jGgAM"
-                value={this.props.videoCode}
-                onChange={ApplicationActions.handleYoutubeCodeChange} />
+                value={this.state.videoCode}
+                onChange={this._handleVideoCodeChange} />
             </div>
           </div>
+          <button
+            style={{ marginLeft : '10px' }}
+            className="btn btn-primary"
+            onClick={ApplicationActions.changeVideo.bind(this, this.state.videoCode)}>
+            Change Video
+          </button>
         </form>
 
         <textarea

@@ -6,11 +6,15 @@ var Defaults = require('stores/Defaults');
 
 var actions = require('actions/ApplicationActions');
 
+var calibrationPausedLyricIndex;
+
 var videoSpeed;
+var rapEventLoopInterval;
 
 module.exports = Reflux.createStore({
   listenables: actions,
   init: function() {
+    this.videoId = localStorage.videoId || 'P4Uv_4jGgAM';
     this.lyrics = localStorage.lyrics;
     try {
       this.parsedLyrics = JSON.parse(localStorage.parsedLyrics);
@@ -19,14 +23,28 @@ module.exports = Reflux.createStore({
     }
 
     this.currentLyricIndex = -1;
+
+    // enum, between stopped and playing
+    this.status = 'stopped';
+  },
+
+  onChangeVideo : function(videoId) {
+    this.videoId = videoId;
+    player.loadVideoById(videoId);
+    player.pauseVideo();
+
+    this.emitChange();
   },
 
   onSaveLyrics : function(lyrics) {
     this.lyrics = lyrics;
-    this.parsedLyrics = this.lyrics.match(/[^\s]+/g).map(lyric => ({ 'lyric' : lyric }));
+    this.parsedLyrics = this.lyrics.match(/[^\s]+/g).map(lyric => ({ lyric }));
+    this.emitChange();
   },
 
+  // TODO save into Firebase
   onSaveToLocalStorage : function() {
+    localStorage.videoId = this.videoId;
     localStorage.lyrics = this.lyrics;
     localStorage.parsedLyrics = JSON.stringify(this.parsedLyrics);
   },
@@ -48,11 +66,18 @@ module.exports = Reflux.createStore({
     player.setPlaybackRate(speed);
     player.playVideo();
 
+    this.status = 'playing';
+
     this.emitChange();
   },
 
   onStopTiming : function() {
     player.stopVideo();
+
+    this.currentLyricIndex = -1;
+    this.status = 'stopped';
+
+    this.emitChange();
   },
 
   onLyricTimingTriggered : function() {
@@ -62,6 +87,7 @@ module.exports = Reflux.createStore({
 
     this.parsedLyrics[this.currentLyricIndex].youtubeTiming = player.getCurrentTime();
     this.parsedLyrics[this.currentLyricIndex].timing = (performance.now() - whenSongActuallyStarted) * videoSpeed;
+
     this.currentLyricIndex++;
 
     this.emitChange();
@@ -79,8 +105,14 @@ module.exports = Reflux.createStore({
   },
 
   onStartCalibration : function() {
-    this.currentLyricIndex = 0;
     var calibrate = () => {
+      if (this.status === 'stopped') {
+        calibrationPausedLyricIndex = this.currentLyricIndex;
+        this.currentLyricIndex = -1;
+        this.emitChange();
+        return;
+      }
+
       Speech.calibrate(this.parsedLyrics[this.currentLyricIndex].lyric, timings => {
         _.extend(this.parsedLyrics[this.currentLyricIndex], timings);
 
@@ -96,10 +128,19 @@ module.exports = Reflux.createStore({
       });
     };
 
+    this.status = 'playing';
+    this.currentLyricIndex = calibrationPausedLyricIndex || 0;
+    this.emitChange();
+
     calibrate();
   },
 
-  onStartRap : function(options) {
+  onStopCalibration : function() {
+    this.status = 'stopped';
+    this.emitChange();
+  },
+
+  onStartRap : function() {
     this.currentLyricIndex = 0;
     this.parsedLyrics.forEach(lyric => {
       lyric.inTransit = false;
@@ -140,7 +181,7 @@ module.exports = Reflux.createStore({
       });
     };
 
-    var rapEventLoopInterval = setInterval(() => {
+    rapEventLoopInterval = setInterval(() => {
 
       if (this.currentLyricIndex >= this.parsedLyrics.length) {
         debugging && console.log('im done!');
@@ -165,20 +206,31 @@ module.exports = Reflux.createStore({
       }
     }, Math.floor(Math.random() * (11)) + 10); // random number between 10 and 20
 
-    if (options.withSong) {
-      // just going to say the first word to prime speechSynthesis (or else it may be like a 2 second gap)
-      Speech.rap({ text : this.parsedLyrics[0].lyric, volume : 0 }, () => {
-        player.seekTo(0);
-        player.setPlaybackRate(1);
-        player.playVideo();
-      });
-    }
+    // just going to say the first word to prime speechSynthesis (or else it may be like a 2 second gap)
+    Speech.rap({ text : this.parsedLyrics[0].lyric, volume : 0 }, () => {
+      player.seekTo(0);
+      player.setPlaybackRate(1);
+      player.playVideo();
+
+      // you're finished
+      this.status = 'playing';
+      this.emitChange();
+    });
+  },
+
+  onStopRap : function() {
+    player.stopVideo();
+    clearInterval(rapEventLoopInterval);
+    this.currentLyricIndex = 0;
+    this.status = 'stopped';
+    this.emitChange();
   },
 
   getExposedData : function() {
     return {
-      'lyrics' : this.lyrics,
-      'parsedLyrics' : this.parsedLyrics,
+      'lyrics'            : this.lyrics,
+      'status'            : this.status,
+      'parsedLyrics'      : this.parsedLyrics,
       'currentLyricIndex' : this.currentLyricIndex
     };
   },

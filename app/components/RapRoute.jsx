@@ -22,6 +22,14 @@ var RapRoute = React.createClass({
     this.transitionTo('calibration');
   },
 
+  _toggleStatus : function() {
+    if (this.state.status === 'playing') {
+      ApplicationActions.stopRap();
+    } else {
+      ApplicationActions.startRap();
+    }
+  },
+
   render : function() {
     return (
       <section className="clearfix">
@@ -31,15 +39,8 @@ var RapRoute = React.createClass({
           <button
             type="button"
             className="btn btn-default"
-            onClick={ApplicationActions.startRap.bind(undefined, { withSong : true })}>
-            Rap with music
-          </button>
-
-          <button
-            type="button"
-            className="btn btn-default"
-            onClick={ApplicationActions.startRap.bind(undefined, { withSong : false })}>
-            Rap without music
+            onClick={this._toggleStatus}>
+            {this.state.status === 'playing' ? 'Stop Rapping' : 'Start Rapping'}
           </button>
         </section>
 

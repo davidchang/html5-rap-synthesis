@@ -26,6 +26,10 @@ var CalibrationRoute = React.createClass({
     this.transitionTo('rap');
   },
 
+  _toggleCalibrationStatus : function() {
+    ApplicationActions[this.state.status === 'playing' ? 'stopCalibration' : 'startCalibration']();
+  },
+
   render : function() {
     return (
       <section className="clearfix">
@@ -36,8 +40,8 @@ var CalibrationRoute = React.createClass({
             <button
               type="button"
               className="btn btn-default"
-              onClick={ApplicationActions.startCalibration}>
-              Start calibration
+              onClick={this._toggleCalibrationStatus}>
+              {this.state.status === 'playing' ? 'Stop calibration' : 'Start calibration'}
             </button>
           </div>
         </section>

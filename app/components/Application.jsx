@@ -13,7 +13,7 @@ var {
 var LyricsRoute = require('components/LyricsRoute');
 var TimingRoute = require('components/TimingRoute');
 var CalibrationRoute = require('components/CalibrationRoute');
-var FinishedRapRoute = require('components/FinishedRapRoute');
+var RapRoute = require('components/RapRoute');
 
 require('bootstrap/dist/css/bootstrap.css');
 require('styles/styles.less');
@@ -54,7 +54,7 @@ var routes = (
     <Route name="lyrics" handler={LyricsRoute} />
     <Route name="timing" handler={TimingRoute} />
     <Route name="calibration" handler={CalibrationRoute} />
-    <Route name="rap" handler={FinishedRapRoute} />
+    <Route name="rap" handler={RapRoute} />
 
     <Redirect from="" to="lyrics" />
     <NotFoundRoute handler={LyricsRoute} />
