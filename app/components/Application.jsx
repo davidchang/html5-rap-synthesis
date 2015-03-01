@@ -6,6 +6,7 @@ var Router = require('react-router');
 var {
   Route,
   Redirect,
+  DefaultRoute,
   NotFoundRoute,
   RouteHandler
 } = Router;
@@ -31,22 +32,25 @@ var Application = React.createClass({
   render : function() {
     return (
       <div className="page-wrapper">
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={ApplicationActions.saveToLocalStorage}>
-          Save App Data To LocalStorage
-        </button>
-
         <div className="player-container">
           <div id="player"></div>
         </div>
-
         <RouteHandler />
       </div>
     );
   }
 
+});
+
+var SavedSongApplication = React.createClass({
+  mixins : [Router.State],
+  componentDidMount : function() {
+    ApplicationActions.loadSavedSong(this.getParams().savedSongId);
+  },
+
+  render : function() {
+    return <RouteHandler />;
+  }
 });
 
 var routes = (
@@ -55,6 +59,13 @@ var routes = (
     <Route name="timing" handler={TimingRoute} />
     <Route name="calibration" handler={CalibrationRoute} />
     <Route name="rap" handler={RapRoute} />
+
+    <Route path=":savedSongId" handler={SavedSongApplication}>
+      <Route name="savedSongCalibration" handler={CalibrationRoute} />
+      <Route name="savedSongRap" handler={RapRoute} />
+      <Redirect from="" to="savedSongRap" />
+      <DefaultRoute handler={RapRoute} />
+    </Route>
 
     <Redirect from="" to="lyrics" />
     <NotFoundRoute handler={LyricsRoute} />

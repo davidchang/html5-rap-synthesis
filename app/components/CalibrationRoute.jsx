@@ -11,11 +11,14 @@ var CalibrationRoute = React.createClass({
 
   mixins : [
     Router.Navigation,
+    Router.State,
     Reflux.connect(ApplicationStore)
   ],
 
   getInitialState : function() {
-    return ApplicationStore.getExposedData();
+    return _.extend(ApplicationStore.getExposedData(), {
+      savedSong : !_.isUndefined(this.getParams().savedSongId)
+    });
   },
 
   _goToTiming : function() {
@@ -23,7 +26,11 @@ var CalibrationRoute = React.createClass({
   },
 
   _goToRap : function() {
-    this.transitionTo('rap');
+    if (!this.state.savedSong) {
+      this.transitionTo('rap');
+    } else {
+      this.transitionTo('savedSongRap', this.getParams());
+    }
   },
 
   _toggleCalibrationStatus : function() {
@@ -31,6 +38,18 @@ var CalibrationRoute = React.createClass({
   },
 
   render : function() {
+    var timingButton = '';
+    if (!this.state.savedSong) {
+      timingButton = (
+        <button
+          type="button"
+          className="btn btn-primary pull-left"
+          onClick={this._goToTiming}>
+          Step 2. Timing.
+        </button>
+      );
+    }
+
     return (
       <section className="clearfix">
         <h1>Step 3. Calibration</h1>
@@ -51,18 +70,13 @@ var CalibrationRoute = React.createClass({
           parsedLyrics={this.state.parsedLyrics}
           currentLyricIndex={this.state.currentLyricIndex} />
 
-        <button
-          type="button"
-          className="btn btn-primary pull-left"
-          onClick={this._goToTiming}>
-          Step 2. Timing.
-        </button>
+        {timingButton}
 
         <button
           type="button"
           className="btn btn-primary pull-right"
           onClick={this._goToRap}>
-          Step 4. Rap.
+          {this.state.savedSong ? 'Go to Rap' : 'Step 4. Rap.'}
         </button>
 
       </section>

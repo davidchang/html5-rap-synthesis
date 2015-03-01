@@ -3,6 +3,7 @@ var _ = require('lodash');
 
 var Speech = require('lib/Speech');
 var Defaults = require('stores/Defaults');
+var Firebase = require('lib/firebaseConnection');
 
 var actions = require('actions/ApplicationActions');
 
@@ -28,6 +29,19 @@ module.exports = Reflux.createStore({
     this.status = 'stopped';
   },
 
+  onLoadSavedSong : function(savedSongId) {
+    Firebase.child(`raps/${savedSongId}`).once('value', dataSnapshot => {
+      var data = dataSnapshot.val();
+      if (data) {
+        this.lyrics = data.lyrics;
+        this.parsedLyrics = data.parsedLyrics;
+        this.videoId = data.videoId;
+
+        actions.changeVideo(this.videoId);
+      }
+    }, console.error);
+  },
+
   onChangeVideo : function(videoId) {
     this.videoId = videoId;
     player.loadVideoById(videoId);
@@ -40,13 +54,6 @@ module.exports = Reflux.createStore({
     this.lyrics = lyrics;
     this.parsedLyrics = this.lyrics.match(/[^\s]+/g).map(lyric => ({ lyric }));
     this.emitChange();
-  },
-
-  // TODO save into Firebase
-  onSaveToLocalStorage : function() {
-    localStorage.videoId = this.videoId;
-    localStorage.lyrics = this.lyrics;
-    localStorage.parsedLyrics = JSON.stringify(this.parsedLyrics);
   },
 
   onRevertToDefaultSong : function() {
@@ -224,6 +231,21 @@ module.exports = Reflux.createStore({
     this.currentLyricIndex = 0;
     this.status = 'stopped';
     this.emitChange();
+  },
+
+  onPublish : function() {
+    Firebase.child('raps').push({
+      'lyrics'       : this.lyrics,
+      'parsedLyrics' : this.parsedLyrics,
+      'videoId'      : this.videoId
+    }, (err) => {
+      if (err) {
+        // didn't work!
+        return;
+      }
+
+      // did work!
+    });
   },
 
   getExposedData : function() {

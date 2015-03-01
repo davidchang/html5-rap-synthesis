@@ -34,6 +34,11 @@ var LyricsRoute = React.createClass({
     this.transitionTo('timing');
   },
 
+  _changeVideo : function(event) {
+    event.preventDefault();
+    ApplicationActions.changeVideo(this.state.videoCode);
+  },
+
   render : function() {
     return (
       <section className="clearfix">
@@ -55,8 +60,8 @@ var LyricsRoute = React.createClass({
           <button
             style={{ marginLeft : '10px' }}
             className="btn btn-primary"
-            onClick={ApplicationActions.changeVideo.bind(this, this.state.videoCode)}>
-            Change Video
+            onClick={this._changeVideo}>
+            Set Video
           </button>
         </form>
 

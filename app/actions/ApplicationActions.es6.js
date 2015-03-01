@@ -1,6 +1,6 @@
 var Reflux = require('reflux');
 module.exports = Reflux.createActions([
-  'saveToLocalStorage',
+  'loadSavedSong',
 
   // lyrics
   'changeVideo',
@@ -19,5 +19,6 @@ module.exports = Reflux.createActions([
 
   // rap
   'startRap',
-  'stopRap'
+  'stopRap',
+  'publish'
 ]);

@@ -1,6 +1,7 @@
 var React = require('react');
 var Reflux = require('reflux');
 var Router = require('react-router');
+var _ = require('lodash');
 
 var ApplicationStore = require('stores/ApplicationStore');
 var ApplicationActions = require('actions/ApplicationActions');
@@ -11,15 +12,22 @@ var RapRoute = React.createClass({
 
   mixins : [
     Router.Navigation,
+    Router.State,
     Reflux.connect(ApplicationStore)
   ],
 
   getInitialState : function() {
-    return ApplicationStore.getExposedData();
+    return _.extend(ApplicationStore.getExposedData(), {
+      savedSong : !_.isUndefined(this.getParams().savedSongId)
+    });
   },
 
   _goToCalibration : function() {
-    this.transitionTo('calibration');
+    if (!this.state.savedSong) {
+      this.transitionTo('calibration');
+    } else {
+      this.transitionTo('savedSongCalibration', this.getParams());
+    }
   },
 
   _toggleStatus : function() {
@@ -31,6 +39,19 @@ var RapRoute = React.createClass({
   },
 
   render : function() {
+
+    var publishButton = '';
+    if (!this.state.savedSong) {
+      publishButton = (
+        <button
+          type="button"
+          className="btn btn-primary pull-right"
+          onClick={ApplicationActions.publish}>
+          Publish
+        </button>
+      );
+    }
+
     return (
       <section className="clearfix">
         <h1>Step 4. Finished Rap</h1>
@@ -53,8 +74,10 @@ var RapRoute = React.createClass({
           type="button"
           className="btn btn-primary pull-left"
           onClick={this._goToCalibration}>
-          Step 3. Calibration.
+          {this.state.savedSong ? 'Go Back to Calibration' : 'Step 3. Calibration.'}
         </button>
+
+        {publishButton}
       </section>
     );
   }
