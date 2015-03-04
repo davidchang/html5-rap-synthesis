@@ -29,7 +29,11 @@ var CalibrationRoute = React.createClass({
   },
 
   _goToTiming : function() {
-    this.transitionTo('timing');
+    if (!this.state.savedSong) {
+      this.transitionTo('timing');
+    } else {
+      this.transitionTo('savedSongTiming', this.getParams());
+    }
   },
 
   _goToRap : function() {

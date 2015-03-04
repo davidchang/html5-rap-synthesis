@@ -16,7 +16,11 @@ module.exports = Reflux.createStore({
   init: function() {
     this.videoId = localStorage.videoId || '';
     this.lyrics = localStorage.lyrics || '';
-    this.parsedLyrics = JSON.parse(localStorage.parsedLyrics) || [];
+    try {
+      this.parsedLyrics = JSON.parse(localStorage.parsedLyrics) || [];
+    } catch(e) {
+      this.parsedLyrics = [];
+    }
 
     this.currentLyricIndex = -1;
     this.miscData = {};
@@ -167,7 +171,7 @@ module.exports = Reflux.createStore({
     var debugging = true;
 
     // numbers > 1 will artificially inflate
-    var mysteriousFactor = 2;
+    var mysteriousFactor = 2.25;
 
     var rap = () => {
       var rate = 1;

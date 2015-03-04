@@ -96,6 +96,16 @@ var RapRoute = React.createClass({
       <section className="clearfix">
         <h1>Step 4. Finished Rap</h1>
 
+        <p>
+          If the rap sounds bad, you may need to re-calibrate by scrolling to the bottom and clicking Calibrate.<br/>
+          If that runs, but the rap still sounds bad, timing could be bad.<br/>
+          Or my event loop (or the speech synthesis API) could act differently on your computer than on mine.
+        </p>
+
+        <p>
+          New recordings can be published via a Publish button on the bottom right.
+        </p>
+
         <section className="space">
           <button
             type="button"

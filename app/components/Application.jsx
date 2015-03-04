@@ -20,6 +20,7 @@ require('bootstrap/dist/css/bootstrap.css');
 require('styles/styles.less');
 
 var Application = React.createClass({
+  mixins : [ Router.Navigation ],
 
   componentDidMount : function() {
     var tag = document.createElement('script');
@@ -29,16 +30,48 @@ var Application = React.createClass({
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
   },
 
+  _goHome : function() {
+    this.transitionTo('app');
+    window.location.reload();
+  },
+
+  _redirect : function(savedSongId) {
+    this.transitionTo('savedSong', { savedSongId });
+    window.location.reload();
+  },
+
   render : function() {
     return (
       <div className="page-wrapper">
         <header className="clearfix">
-          <h1 className="pull-left">Rapping Browser</h1>
+          <h1>Rapping Browser</h1>
           <a
-            style={{ cursor : 'pointer' }}
-            onClick={ApplicationActions.saveIntoLocalStorage}
-            className="pull-right">
-            Save Current into Local Storage
+            style={{ cursor : 'pointer', marginBottom : '10' }}
+            onClick={ApplicationActions.saveIntoLocalStorage}>
+            Save Current Data into Local Storage
+          </a>
+
+          <h4>Pre-Recorded Songs:</h4>
+          <ul>
+            <li>
+              <a style={{ cursor : 'pointer' }} onClick={() => this._redirect('-JjYb7jLwlD4YjZJPZK3')}>
+                Lose Yourself
+              </a>
+            </li>
+            <li>
+              <a style={{ cursor : 'pointer' }} onClick={() => this._redirect('-JjYUI4SH0rotsJYAmsR')}>
+                Fresh Prince of Bel-Air
+              </a>
+            </li>
+            <li>
+              <a style={{ cursor : 'pointer' }} onClick={() => this._redirect('-JjYRritv6qLfqN3o2V-')}>
+                La Biblioteca (from Community)
+              </a>
+            </li>
+          </ul>
+
+          Or <a style={{ cursor : 'pointer' }} onClick={this._goHome}>
+            make your own recording
           </a>
         </header>
         <div className="player-container">

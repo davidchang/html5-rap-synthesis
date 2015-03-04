@@ -57,7 +57,7 @@ var TimingRoute = React.createClass({
     if (!this.state.savedSong) {
       this.transitionTo('lyrics');
     } else {
-      this.transitionTo('savedLyrics', this.getParams());
+      this.transitionTo('savedSongLyrics', this.getParams());
     }
   },
 
@@ -66,7 +66,7 @@ var TimingRoute = React.createClass({
     if (!this.state.savedSong) {
       this.transitionTo('calibration');
     } else {
-      this.transitionTo('savedCalibration', this.getParams());
+      this.transitionTo('savedSongCalibration', this.getParams());
     }
   },
 
@@ -102,11 +102,11 @@ var TimingRoute = React.createClass({
         <h1>Step 2. Timing</h1>
         <section>
 
-          <div>
+          <p>
             When you click 'Start Timing', the Youtube video will start playing. At the beginning of each word, press any of the keys in this list:
             A, S, D, F, G, H, J, K, L
             to save the timing of the lyric. Do this for all lyrics. Sorry, no pausing!
-          </div>
+          </p>
 
           { /* this should be fixed later to dynamically pull playback rates */ }
           <div style={{ margin : '10 0' }}>
