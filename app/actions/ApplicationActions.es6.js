@@ -1,57 +1,24 @@
-var AppDispatcher = require('../AppDispatcher');
-var ApplicationConstants = require('constants/ApplicationConstants');
+var Reflux = require('reflux');
+// exposing on the window for the youtube API to plug in to
+module.exports = window.ApplicationActions = Reflux.createActions([
+  'loadSavedSong',
+  'saveIntoLocalStorage',
+  'stopSong',
 
-var ExampleActions = {
+  // lyrics
+  'changeVideo',
+  'saveLyrics',
 
-  changeRoute : newRoute => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.CHANGE_ROUTE,
-      newRoute    : newRoute
-    });
-  },
+  // timing
+  'startTiming',
 
-  save : () => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.SAVE_TO_LOCAL
-    });
-  },
+  'lyricTimingTriggered',
+  'crunchLyricDurations',
 
-  revertToDefaultSong : () => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.REVERT_TO_DEFAULT_SONG
-    });
-  },
+  // calibration
+  'startCalibration',
 
-  playSong : () => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.PLAY_SONG
-    });
-  },
-
-  handleLyricsChange : event => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.LYRICS_CHANGE,
-      newValue   : event.target.value
-    });
-  },
-
-  lyricTimingTriggered : () => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.LYRIC_TIMING_CHANGED
-    });
-  },
-
-  startCalibration : () => {
-    AppDispatcher.handleViewAction({
-      actionType : ApplicationConstants.START_CALIBRATION
-    });
-  },
-
-  rapToMe : options => {
-    options.actionType = ApplicationConstants.RAP_TO_ME;
-    AppDispatcher.handleViewAction(options);
-  }
-
-};
-
-module.exports = ExampleActions;
+  // rap
+  'startRap',
+  'publish'
+]);

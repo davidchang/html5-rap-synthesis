@@ -1,21 +1,33 @@
 <html>
-<head></head>
+<head>
+  <title>HTML5 Rap Synthesis</title>
+</head>
 <body>
   <div id="mountNode"></div>
   <script src="bundle.js"></script>
   <script>
     // needs to be global
     var player;
+    var whenSongActuallyStarted;
+
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('player', {
         height  : '390',
         width   : '640',
-        videoId : 'P4Uv_4jGgAM',
-        events  : { 'onReady' : onPlayerReady }
+        events  : {
+          'onStateChange' : onPlayerStateChange
+        }
       });
     }
 
-    var onPlayerReady = function(event) { };
+    var onPlayerStateChange = function(event) {
+      if (event.data == YT.PlayerState.PLAYING) {
+        // TODO make this trigger a flux action instead
+        whenSongActuallyStarted = performance.now();
+      } else if (event.data == YT.PlayerState.ENDED || event.data == YT.PlayerState.PAUSED) {
+        ApplicationActions.stopSong();
+      }
+    };
   </script>
 </body>
 </html>

@@ -1,13 +1,54 @@
 var React = require('react');
+var Reflux = require('reflux');
+var Router = require('react-router');
 
+var ApplicationStore = require('stores/ApplicationStore');
 var ApplicationActions = require('actions/ApplicationActions');
+
+var CalibratedLyricsTable = require('components/CalibratedLyricsTable');
 
 var CalibrationRoute = React.createClass({
 
-  render : function() {
-    if (this.props.route !== 'calibration') {
-      return null;
+  statics : {
+    willTransitionFrom : function() {
+      ApplicationActions.saveIntoLocalStorage();
+      ApplicationActions.stopSong();
     }
+  },
+
+  mixins : [
+    Router.Navigation,
+    Router.State,
+    Reflux.connect(ApplicationStore)
+  ],
+
+  getInitialState : function() {
+    return _.extend(ApplicationStore.getExposedData(), {
+      savedSong : !_.isUndefined(this.getParams().savedSongId)
+    });
+  },
+
+  _goToTiming : function() {
+    if (!this.state.savedSong) {
+      this.transitionTo('timing');
+    } else {
+      this.transitionTo('savedSongTiming', this.getParams());
+    }
+  },
+
+  _goToRap : function() {
+    if (!this.state.savedSong) {
+      this.transitionTo('rap');
+    } else {
+      this.transitionTo('savedSongRap', this.getParams());
+    }
+  },
+
+  _toggleCalibrationStatus : function() {
+    ApplicationActions[this.state.status === 'playing' ? 'stopSong' : 'startCalibration']();
+  },
+
+  render : function() {
 
     return (
       <section className="clearfix">
@@ -15,35 +56,34 @@ var CalibrationRoute = React.createClass({
 
         <section>
           <div className="btn-group">
-            <button type="button" className="btn btn-default" onClick={ApplicationActions.startCalibration}>Start calibration</button>
+            <button
+              type="button"
+              className="btn btn-default"
+              onClick={this._toggleCalibrationStatus}>
+              {this.state.status === 'playing' ? 'Stop calibration' : 'Start calibration'}
+            </button>
           </div>
         </section>
 
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Word</th>
-              <th>Time it was said (in ms)</th>
-              <th>Desired timing (in ms)</th>
-              <th>Actual timing (in ms)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.props.parsedLyrics.map(lyric => {
-              return (
-                <tr>
-                  <td>{lyric.lyric}</td>
-                  <td>{lyric.timing}</td>
-                  <td>{lyric.expectedDuration}</td>
-                  <td>{lyric.normalDuration}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <CalibratedLyricsTable
+          mode="calibration"
+          parsedLyrics={this.state.parsedLyrics}
+          currentLyricIndex={this.state.currentLyricIndex} />
 
-        <button type="button" className="btn btn-primary pull-left" onClick={ApplicationActions.changeRoute.bind(undefined, 'timing')}>Step 2. Timing.</button>
-        <button type="button" className="btn btn-primary pull-right" onClick={ApplicationActions.changeRoute.bind(undefined, 'shipIt')}>Step 4. Finished Rap.</button>
+        <button
+          type="button"
+          className="btn btn-primary pull-left"
+          onClick={this._goToTiming}>
+          Step 2. Timing.
+        </button>
+
+        <button
+          type="button"
+          className="btn btn-primary pull-right"
+          onClick={this._goToRap}>
+          Step 4. Rap.
+        </button>
+
       </section>
     );
   }
