@@ -14,6 +14,7 @@
       player = new YT.Player('player', {
         height  : '390',
         width   : '640',
+        playerVars : { controls : 0 },
         events  : {
           'onStateChange' : onPlayerStateChange
         }
