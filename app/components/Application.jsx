@@ -45,11 +45,14 @@ var Application = React.createClass({
       <div className="page-wrapper">
         <header className="clearfix">
           <h1>Rapping Browser</h1>
-          <a
-            style={{ cursor : 'pointer', marginBottom : '10' }}
-            onClick={ApplicationActions.saveIntoLocalStorage}>
-            Save Current Data into Local Storage
-          </a>
+          <div><a href="https://github.com/davidchang/html5-rap-synthesis">Code</a></div>
+          <div>
+            <a
+              style={{ cursor : 'pointer', marginBottom : '10' }}
+              onClick={ApplicationActions.saveIntoLocalStorage}>
+              Save Current Data into Local Storage
+            </a>
+          </div>
 
           <h4>Pre-Recorded Songs:</h4>
           <ul>
