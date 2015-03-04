@@ -32,6 +32,15 @@ var Application = React.createClass({
   render : function() {
     return (
       <div className="page-wrapper">
+        <header className="clearfix">
+          <h1 className="pull-left">Rapping Browser</h1>
+          <a
+            style={{ cursor : 'pointer' }}
+            onClick={ApplicationActions.saveIntoLocalStorage}
+            className="pull-right">
+            Save Current into Local Storage
+          </a>
+        </header>
         <div className="player-container">
           <div id="player"></div>
         </div>
@@ -60,7 +69,9 @@ var routes = (
     <Route name="calibration" handler={CalibrationRoute} />
     <Route name="rap" handler={RapRoute} />
 
-    <Route path=":savedSongId" handler={SavedSongApplication}>
+    <Route name="savedSong" path=":savedSongId" handler={SavedSongApplication}>
+      <Route name="savedSongLyrics" handler={LyricsRoute} />
+      <Route name="savedSongTiming" handler={TimingRoute} />
       <Route name="savedSongCalibration" handler={CalibrationRoute} />
       <Route name="savedSongRap" handler={RapRoute} />
       <Redirect from="" to="savedSongRap" />

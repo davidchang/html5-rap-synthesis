@@ -1,6 +1,9 @@
 var Reflux = require('reflux');
-module.exports = Reflux.createActions([
+// exposing on the window for the youtube API to plug in to
+module.exports = window.ApplicationActions = Reflux.createActions([
   'loadSavedSong',
+  'saveIntoLocalStorage',
+  'stopSong',
 
   // lyrics
   'changeVideo',
@@ -8,17 +11,14 @@ module.exports = Reflux.createActions([
 
   // timing
   'startTiming',
-  'stopTiming',
 
   'lyricTimingTriggered',
   'crunchLyricDurations',
 
   // calibration
   'startCalibration',
-  'stopCalibration',
 
   // rap
   'startRap',
-  'stopRap',
   'publish'
 ]);

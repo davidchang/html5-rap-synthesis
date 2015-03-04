@@ -2,7 +2,6 @@ var Reflux = require('reflux');
 var _ = require('lodash');
 
 var Speech = require('lib/Speech');
-var Defaults = require('stores/Defaults');
 var Firebase = require('lib/firebaseConnection');
 
 var actions = require('actions/ApplicationActions');
@@ -15,18 +14,24 @@ var rapEventLoopInterval;
 module.exports = Reflux.createStore({
   listenables: actions,
   init: function() {
-    this.videoId = localStorage.videoId || 'P4Uv_4jGgAM';
-    this.lyrics = localStorage.lyrics;
-    try {
-      this.parsedLyrics = JSON.parse(localStorage.parsedLyrics);
-    } catch(e) {
-      this.parsedLyrics = [];
-    }
+    this.videoId = localStorage.videoId || '';
+    this.lyrics = localStorage.lyrics || '';
+    this.parsedLyrics = JSON.parse(localStorage.parsedLyrics) || [];
 
     this.currentLyricIndex = -1;
+    this.miscData = {};
 
     // enum, between stopped and playing
     this.status = 'stopped';
+
+    if (this.videoId) {
+      var playerDefinedInterval = setInterval(() => {
+        if (!_.isUndefined(player) && _.isFunction(player.loadVideoById)) {
+          actions.changeVideo(this.videoId);
+          clearInterval(playerDefinedInterval);
+        }
+      }, 200);
+    }
   },
 
   onLoadSavedSong : function(savedSongId) {
@@ -40,6 +45,12 @@ module.exports = Reflux.createStore({
         actions.changeVideo(this.videoId);
       }
     }, console.error);
+  },
+
+  onSaveIntoLocalStorage : function() {
+    localStorage.videoId = this.videoId;
+    localStorage.lyrics = this.lyrics;
+    localStorage.parsedLyrics = JSON.stringify(this.parsedLyrics);
   },
 
   onChangeVideo : function(videoId) {
@@ -56,10 +67,11 @@ module.exports = Reflux.createStore({
     this.emitChange();
   },
 
-  onRevertToDefaultSong : function() {
-    this.lyrics = Defaults.lyrics;
-    this.parsedLyrics = JSON.parse(Defaults.parsedLyrics);
-
+  onStopSong : function() {
+    player.stopVideo();
+    player.seekTo(0);
+    clearInterval(rapEventLoopInterval);
+    this.status = 'stopped';
     this.emitChange();
   },
 
@@ -74,15 +86,6 @@ module.exports = Reflux.createStore({
     player.playVideo();
 
     this.status = 'playing';
-
-    this.emitChange();
-  },
-
-  onStopTiming : function() {
-    player.stopVideo();
-
-    this.currentLyricIndex = -1;
-    this.status = 'stopped';
 
     this.emitChange();
   },
@@ -112,6 +115,9 @@ module.exports = Reflux.createStore({
   },
 
   onStartCalibration : function() {
+
+    var calibrationCache = {};
+
     var calibrate = () => {
       if (this.status === 'stopped') {
         calibrationPausedLyricIndex = this.currentLyricIndex;
@@ -120,18 +126,26 @@ module.exports = Reflux.createStore({
         return;
       }
 
-      Speech.calibrate(this.parsedLyrics[this.currentLyricIndex].lyric, timings => {
-        _.extend(this.parsedLyrics[this.currentLyricIndex], timings);
-
+      var goToNext = () => {
         this.currentLyricIndex++;
-
         this.emitChange();
-
         if (this.currentLyricIndex >= this.parsedLyrics.length) {
           return;
         }
-
         calibrate();
+      };
+
+      var lyric = this.parsedLyrics[this.currentLyricIndex].lyric;
+
+      if (calibrationCache[lyric.toLowerCase()]) {
+        _.extend(this.parsedLyrics[this.currentLyricIndex], calibrationCache[lyric.toLowerCase()]);
+        return goToNext();
+      }
+
+      Speech.calibrate(lyric, timings => {
+        calibrationCache[lyric.toLowerCase()] = timings;
+        _.extend(this.parsedLyrics[this.currentLyricIndex], timings);
+        goToNext();
       });
     };
 
@@ -140,11 +154,6 @@ module.exports = Reflux.createStore({
     this.emitChange();
 
     calibrate();
-  },
-
-  onStopCalibration : function() {
-    this.status = 'stopped';
-    this.emitChange();
   },
 
   onStartRap : function() {
@@ -158,7 +167,7 @@ module.exports = Reflux.createStore({
     var debugging = true;
 
     // numbers > 1 will artificially inflate
-    var mysteriousFactor = 2; //1.5;
+    var mysteriousFactor = 2;
 
     var rap = () => {
       var rate = 1;
@@ -188,30 +197,35 @@ module.exports = Reflux.createStore({
       });
     };
 
-    rapEventLoopInterval = setInterval(() => {
+    var startRapInterval = () => {
+      rapEventLoopInterval = setInterval(() => {
 
-      if (this.currentLyricIndex >= this.parsedLyrics.length) {
-        debugging && console.log('im done!');
-        clearInterval(rapEventLoopInterval);
-        return;
-      }
+        if (this.currentLyricIndex >= this.parsedLyrics.length) {
+          debugging && console.log('im done!');
+          clearInterval(rapEventLoopInterval);
+          return;
+        }
 
-      var currentLyric = this.parsedLyrics[this.currentLyricIndex];
-      var now = performance.now();
+        var currentLyric = this.parsedLyrics[this.currentLyricIndex];
+        var now = performance.now();
 
-      var youtubeTiming = player.getCurrentTime();
-      var timing = now - whenSongActuallyStarted;
+        var youtubeTiming = player.getCurrentTime();
+        var timing = now - whenSongActuallyStarted;
 
-      // while (((this.currentLyricIndex+1) < this.parsedLyrics.length) && ((this.parsedLyrics[this.currentLyricIndex+1].timing - offset) < (now - whenSongActuallyStarted))) {
-      //   console.log('skipping ', this.parsedLyrics[this.currentLyricIndex]);
-      //   ++this.currentLyricIndex;
-      // }
+        // while (((this.currentLyricIndex+1) < this.parsedLyrics.length) && ((this.parsedLyrics[this.currentLyricIndex+1].timing - offset) < (now - whenSongActuallyStarted))) {
+        //   console.log('skipping ', this.parsedLyrics[this.currentLyricIndex]);
+        //   ++this.currentLyricIndex;
+        // }
 
-      if (!currentLyric.inTransit && ((currentLyric.timing - offset) < timing)) {
-        currentLyric.eventLoopTiming = timing;
-        rap();
-      }
-    }, Math.floor(Math.random() * (11)) + 10); // random number between 10 and 20
+        if (!currentLyric.inTransit && ((currentLyric.timing - offset) < timing)) {
+          currentLyric.eventLoopTiming = timing;
+          rap();
+        }
+      }, Math.floor(Math.random() * (11)) + 10); // random number between 10 and 20
+    };
+
+    this.status = 'playing';
+    this.emitChange();
 
     // just going to say the first word to prime speechSynthesis (or else it may be like a 2 second gap)
     Speech.rap({ text : this.parsedLyrics[0].lyric, volume : 0 }, () => {
@@ -219,32 +233,32 @@ module.exports = Reflux.createStore({
       player.setPlaybackRate(1);
       player.playVideo();
 
-      // you're finished
-      this.status = 'playing';
-      this.emitChange();
+      setTimeout(startRapInterval, 1000);
     });
   },
 
-  onStopRap : function() {
-    player.stopVideo();
-    clearInterval(rapEventLoopInterval);
-    this.currentLyricIndex = 0;
-    this.status = 'stopped';
-    this.emitChange();
-  },
-
   onPublish : function() {
-    Firebase.child('raps').push({
+    var newRapRef = Firebase.child('raps').push();
+    newRapRef.set({
       'lyrics'       : this.lyrics,
       'parsedLyrics' : this.parsedLyrics,
       'videoId'      : this.videoId
     }, (err) => {
+
       if (err) {
         // didn't work!
+        this.miscData = { err : err };
+        this.emitChange('publishError');
         return;
       }
 
-      // did work!
+      // something like https://rap-synthesis.firebaseio.com/raps/-JjY3_U_zXvytVLtCpyf
+      var url = newRapRef.toString();
+      var redirectKey = url.substring(url.lastIndexOf('/') + 1);
+
+      // did work! want to redirect
+      this.miscData = { key : redirectKey };
+      this.emitChange('publishSuccess');
     });
   },
 
@@ -253,7 +267,9 @@ module.exports = Reflux.createStore({
       'lyrics'            : this.lyrics,
       'status'            : this.status,
       'parsedLyrics'      : this.parsedLyrics,
-      'currentLyricIndex' : this.currentLyricIndex
+      'currentLyricIndex' : this.currentLyricIndex,
+      'videoId'           : this.videoId,
+      'miscData'          : this.miscData
     };
   },
 

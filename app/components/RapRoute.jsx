@@ -10,16 +10,32 @@ var CalibratedLyricsTable = require('components/CalibratedLyricsTable');
 
 var RapRoute = React.createClass({
 
+  statics : {
+    willTransitionFrom : function() {
+      ApplicationActions.stopSong();
+    }
+  },
+
   mixins : [
     Router.Navigation,
     Router.State,
-    Reflux.connect(ApplicationStore)
+    Reflux.listenTo(ApplicationStore, '_onStatusChange')
   ],
 
   getInitialState : function() {
     return _.extend(ApplicationStore.getExposedData(), {
       savedSong : !_.isUndefined(this.getParams().savedSongId)
     });
+  },
+
+  _onStatusChange : function(updatedData) {
+    if (updatedData._status === 'publishSuccess') {
+      setTimeout(() => {
+        this.transitionTo('savedSong', { savedSongId : updatedData.miscData.key });
+      }, 3000);
+    }
+
+    this.setState(updatedData);
   },
 
   _goToCalibration : function() {
@@ -32,10 +48,17 @@ var RapRoute = React.createClass({
 
   _toggleStatus : function() {
     if (this.state.status === 'playing') {
-      ApplicationActions.stopRap();
+      ApplicationActions.stopSong();
     } else {
       ApplicationActions.startRap();
     }
+  },
+
+  _publish : function() {
+    this.setState({
+      '_status' : 'pending'
+    });
+    ApplicationActions.publish();
   },
 
   render : function() {
@@ -46,11 +69,28 @@ var RapRoute = React.createClass({
         <button
           type="button"
           className="btn btn-primary pull-right"
-          onClick={ApplicationActions.publish}>
+          disabled={this.state._status === 'pending' || this.state._status === 'publishSuccess'}
+          onClick={this._publish}>
           Publish
         </button>
       );
     }
+
+    var publishFeedback = '';
+    if (this.state._status === 'publishSuccess') {
+      publishFeedback = 'Saved! Redirecting in 3 seconds';
+    } else if (this.state._status === 'publishError') {
+      publishFeedback = `Error Saving: ${this.state.miscData.err}`;
+    }
+
+    if (publishFeedback) {
+      publishFeedback = (
+        <span style={{ marginLeft : '15' }} className="pull-right">
+          {publishFeedback}
+        </span>
+      );
+    }
+
 
     return (
       <section className="clearfix">
@@ -74,9 +114,10 @@ var RapRoute = React.createClass({
           type="button"
           className="btn btn-primary pull-left"
           onClick={this._goToCalibration}>
-          {this.state.savedSong ? 'Go Back to Calibration' : 'Step 3. Calibration.'}
+          Step 3. Calibration.
         </button>
 
+        {publishFeedback}
         {publishButton}
       </section>
     );

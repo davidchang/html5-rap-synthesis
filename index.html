@@ -14,19 +14,18 @@
       player = new YT.Player('player', {
         height  : '390',
         width   : '640',
-        videoId : '',
         events  : {
-          'onReady' : onPlayerReady,
           'onStateChange' : onPlayerStateChange
         }
       });
     }
 
-    var onPlayerReady = function(event) { };
-
     var onPlayerStateChange = function(event) {
       if (event.data == YT.PlayerState.PLAYING) {
+        // TODO make this trigger a flux action instead
         whenSongActuallyStarted = performance.now();
+      } else if (event.data == YT.PlayerState.ENDED || event.data == YT.PlayerState.PAUSED) {
+        ApplicationActions.stopSong();
       }
     };
   </script>

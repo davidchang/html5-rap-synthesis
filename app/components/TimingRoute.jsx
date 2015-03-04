@@ -12,13 +12,40 @@ var listener = new keypress.Listener();
 
 var TimingRoute = React.createClass({
 
+  statics : {
+    willTransitionFrom : function() {
+      ApplicationActions.saveIntoLocalStorage();
+      ApplicationActions.stopSong();
+    }
+  },
+
   mixins : [
     Router.Navigation,
+    Router.State,
     Reflux.connect(ApplicationStore)
   ],
 
   getInitialState : function() {
-    return _.extend(ApplicationStore.getExposedData(), { speed : 1 });
+    return _.extend(ApplicationStore.getExposedData(), {
+      savedSong : !_.isUndefined(this.getParams().savedSongId),
+      speed : 0.5
+    });
+  },
+
+  componentWillMount : function() {
+    // only attach keyboard bindings when you start the song to time
+    var listeners = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'].map(key => {
+      return {
+        'keys' : key,
+        'on_keydown' : () => {
+          if (this.state.status !== 'stopped') {
+            ApplicationActions.lyricTimingTriggered();
+          }
+        }
+      };
+    });
+
+    listener.register_many(listeners);
   },
 
   componentWillUnmount : function() {
@@ -27,25 +54,28 @@ var TimingRoute = React.createClass({
   },
 
   _goToLyrics : function() {
-    this.transitionTo('lyrics');
+    if (!this.state.savedSong) {
+      this.transitionTo('lyrics');
+    } else {
+      this.transitionTo('savedLyrics', this.getParams());
+    }
   },
 
   _goToCalibration : function() {
     ApplicationActions.crunchLyricDurations();
-    this.transitionTo('calibration');
+    if (!this.state.savedSong) {
+      this.transitionTo('calibration');
+    } else {
+      this.transitionTo('savedCalibration', this.getParams());
+    }
   },
 
   _togglePlayingStatus : function() {
     if (this.state.status === 'stopped') {
-      // only attach keyboard bindings when you start the song to time
-      var listeners = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'].map(key => {
-        return { 'keys' : key, 'on_keydown' : ApplicationActions.lyricTimingTriggered };
-      });
 
-      listener.register_many(listeners);
       ApplicationActions.startTiming(this.state.speed);
     } else {
-      ApplicationActions.stopTiming();
+      ApplicationActions.stopSong();
     }
   },
 
@@ -72,31 +102,31 @@ var TimingRoute = React.createClass({
         <h1>Step 2. Timing</h1>
         <section>
 
-          { /* this should be fixed later to dynamically pull playback rates */ }
           <div>
-            <label className="radio-inline">
-              <input checked={this.state.speed == 0.25} onChange={this._speedChange} type="radio" name="speedOpt" value="0.25" />0.25
-            </label>
+            When you click 'Start Timing', the Youtube video will start playing. At the beginning of each word, press any of the keys in this list:
+            A, S, D, F, G, H, J, K, L
+            to save the timing of the lyric. Do this for all lyrics. Sorry, no pausing!
+          </div>
+
+          { /* this should be fixed later to dynamically pull playback rates */ }
+          <div style={{ margin : '10 0' }}>
+            <span style={{ marginRight : '15' }}>Select play speed</span>
             <label className="radio-inline">
               <input checked={this.state.speed == 0.5} onChange={this._speedChange} type="radio" name="speedOpt" value="0.5" />0.5
             </label>
             <label className="radio-inline">
               <input checked={this.state.speed == 1} onChange={this._speedChange} type="radio" name="speedOpt" value="1" />1
             </label>
-            <label className="radio-inline">
-              <input checked={this.state.speed == 1.5} onChange={this._speedChange} type="radio" name="speedOpt" value="1.5" />1.5
-            </label>
-            <label className="radio-inline">
-              <input checked={this.state.speed == 2} onChange={this._speedChange} type="radio" name="speedOpt" value="2" />2
-            </label>
           </div>
 
-          <button
-            type="button"
-            className="btn btn-default"
-            onClick={this._togglePlayingStatus}>
-            {this.state.status === 'playing' ? 'Stop Timing' : 'Start Timing'}
-          </button>
+          <div>
+            <button
+              type="button"
+              className="btn btn-default"
+              onClick={this._togglePlayingStatus}>
+              {this.state.status === 'playing' ? 'Stop Timing' : 'Start Timing'}
+            </button>
+          </div>
 
         </section>
 

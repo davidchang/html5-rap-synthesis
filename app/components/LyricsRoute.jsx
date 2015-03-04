@@ -5,10 +5,23 @@ var ApplicationStore = require('stores/ApplicationStore');
 var ApplicationActions = require('actions/ApplicationActions');
 
 var LyricsRoute = React.createClass({
-  mixins : [Router.Navigation],
+  mixins : [
+    Router.Navigation,
+    Router.State
+  ],
+
+  statics : {
+    willTransitionFrom : function() {
+      ApplicationActions.saveIntoLocalStorage();
+    }
+  },
 
   getInitialState : function() {
-    return { lyrics : '', videoCode : '' };
+    return {
+      lyrics : '',
+      videoId : '',
+      savedSong : !_.isUndefined(this.getParams().savedSongId)
+    };
   },
 
   componentWillMount : function() {
@@ -19,7 +32,7 @@ var LyricsRoute = React.createClass({
   _handleVideoCodeChange : function(event) {
     event.preventDefault();
     this.setState({
-      videoCode : event.target.value
+      videoId : event.target.value
     });
   },
 
@@ -31,12 +44,16 @@ var LyricsRoute = React.createClass({
 
   _goToTiming : function() {
     ApplicationActions.saveLyrics(this.state.lyrics);
-    this.transitionTo('timing');
+    if (!this.state.savedSong) {
+      this.transitionTo('timing');
+    } else {
+      this.transitionTo('savedTiming', this.getParams());
+    }
   },
 
   _changeVideo : function(event) {
     event.preventDefault();
-    ApplicationActions.changeVideo(this.state.videoCode);
+    ApplicationActions.changeVideo(this.state.videoId);
   },
 
   render : function() {
@@ -53,7 +70,7 @@ var LyricsRoute = React.createClass({
                 className="form-control"
                 id="youtubeVideoCode"
                 placeholder="P4Uv_4jGgAM"
-                value={this.state.videoCode}
+                value={this.state.videoId}
                 onChange={this._handleVideoCodeChange} />
             </div>
           </div>
@@ -64,6 +81,8 @@ var LyricsRoute = React.createClass({
             Set Video
           </button>
         </form>
+
+        <p>Paste lyrics below - words are determined by whitespace.</p>
 
         <textarea
           className="form-control space"

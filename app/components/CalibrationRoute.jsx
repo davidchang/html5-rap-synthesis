@@ -9,6 +9,13 @@ var CalibratedLyricsTable = require('components/CalibratedLyricsTable');
 
 var CalibrationRoute = React.createClass({
 
+  statics : {
+    willTransitionFrom : function() {
+      ApplicationActions.saveIntoLocalStorage();
+      ApplicationActions.stopSong();
+    }
+  },
+
   mixins : [
     Router.Navigation,
     Router.State,
@@ -34,21 +41,10 @@ var CalibrationRoute = React.createClass({
   },
 
   _toggleCalibrationStatus : function() {
-    ApplicationActions[this.state.status === 'playing' ? 'stopCalibration' : 'startCalibration']();
+    ApplicationActions[this.state.status === 'playing' ? 'stopSong' : 'startCalibration']();
   },
 
   render : function() {
-    var timingButton = '';
-    if (!this.state.savedSong) {
-      timingButton = (
-        <button
-          type="button"
-          className="btn btn-primary pull-left"
-          onClick={this._goToTiming}>
-          Step 2. Timing.
-        </button>
-      );
-    }
 
     return (
       <section className="clearfix">
@@ -70,13 +66,18 @@ var CalibrationRoute = React.createClass({
           parsedLyrics={this.state.parsedLyrics}
           currentLyricIndex={this.state.currentLyricIndex} />
 
-        {timingButton}
+        <button
+          type="button"
+          className="btn btn-primary pull-left"
+          onClick={this._goToTiming}>
+          Step 2. Timing.
+        </button>
 
         <button
           type="button"
           className="btn btn-primary pull-right"
           onClick={this._goToRap}>
-          {this.state.savedSong ? 'Go to Rap' : 'Step 4. Rap.'}
+          Step 4. Rap.
         </button>
 
       </section>
